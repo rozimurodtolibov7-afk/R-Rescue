@@ -1,84 +1,169 @@
 <!DOCTYPE html>
-<html lang="uz">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>R-Rescue: Qutqaruvchi</title>
+    <title>R-Quest: Digital Dungeon</title>
     <style>
-        :root { --wall: #5d4037; --lava: #ff5722; --gold: #ffd700; --hero: #2196f3; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Arial Rounded MT Bold', sans-serif; }
-        body { background: #222; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        :root { --wall: #1a1a2e; --floor: #0f0f1a; --hero: #00f3ff; --enemy: #ff0055; }
+        body { margin: 0; overflow: hidden; background: var(--floor); color: white; font-family: 'Orbitron', sans-serif; touch-action: none; }
+        
+        #hud { position: fixed; top: 15px; width: 100%; display: flex; justify-content: space-around; z-index: 100; pointer-events: none; }
+        .stat { background: rgba(0,0,0,0.8); padding: 8px 15px; border: 1px solid var(--hero); border-radius: 5px; box-shadow: 0 0 10px var(--hero); }
 
-        .game-box { position: relative; width: 320px; height: 480px; background: #333; border: 8px solid var(--wall); border-radius: 20px; overflow: hidden; }
-        
-        /* Pins (To'siqlar) */
-        .pin { position: absolute; height: 10px; background: #999; border-radius: 5px; cursor: pointer; z-index: 100; transition: transform 0.5s; }
-        .pin::after { content: '⭕'; position: absolute; right: -20px; top: -10px; font-size: 20px; }
-        
-        /* Elements */
-        .entity { position: absolute; width: 50px; height: 50px; font-size: 40px; display: flex; align-items: center; justify-content: center; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        
-        #hero { top: 50px; left: 135px; z-index: 50; }
-        #lava { top: 200px; left: 135px; color: var(--lava); }
-        #treasure { bottom: 50px; left: 135px; }
+        canvas { display: block; }
 
-        .msg { position: absolute; inset: 0; background: rgba(0,0,0,0.8); display: none; flex-direction: column; align-items: center; justify-content: center; color: white; z-index: 1000; text-align: center; padding: 20px; }
-        .btn { background: var(--hero); border: none; padding: 10px 30px; border-radius: 20px; color: white; font-weight: bold; margin-top: 20px; cursor: pointer; }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; text-align: center; }
+        button { padding: 15px 50px; font-size: 20px; background: var(--hero); border: none; color: black; font-weight: bold; border-radius: 5px; cursor: pointer; margin-top: 25px; box-shadow: 0 0 20px var(--hero); }
     </style>
 </head>
 <body>
 
-<div class="game-box">
-    <div id="hero" class="entity">🤠</div>
-    <div id="lava" class="entity">🔥</div>
-    <div id="treasure" class="entity">💰</div>
-
-    <div id="pin1" class="pin" style="width: 200px; top: 150px; left: 60px;" onclick="pullPin('pin1', 'lava')"></div>
-    <div id="pin2" class="pin" style="width: 200px; top: 300px; left: 60px;" onclick="pullPin('pin2', 'hero')"></div>
-
-    <div id="status" class="msg">
-        <h1 id="result-title"></h1>
-        <button class="btn" onclick="location.reload()">QAYTA URINISH</button>
-    </div>
+<div id="hud">
+    <div class="stat">HP: <span id="hp">100</span></div>
+    <div class="stat">RC: <span id="rc">0</span></div>
 </div>
 
+<div id="start-screen" class="overlay">
+    <h1 style="color: var(--hero); font-size: 40px; margin:0;">R-QUEST</h1>
+    <p>Tap to move and attack enemies.<br>Collect crystals to power up!</p>
+    <button onclick="startQuest()">ENTER DUNGEON</button>
+</div>
+
+<canvas id="dungeonCanvas"></canvas>
+
 <script>
-    let lavaDropped = false;
-    let heroDropped = false;
+    const canvas = document.getElementById('dungeonCanvas');
+    const ctx = canvas.getContext('2d');
+    let gameActive = false, rc = 0, hp = 100;
+    
+    const hero = { x: 100, y: 100, targetX: 100, targetY: 100, size: 30 };
+    let enemies = [], crystals = [];
 
-    function pullPin(pinId, type) {
-        const pin = document.getElementById(pinId);
-        pin.style.transform = "translateX(300px)";
-        setTimeout(() => pin.style.display = "none", 500);
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-        if (type === 'lava') {
-            dropItem('lava', 250);
-            lavaDropped = true;
-        } else if (type === 'hero') {
-            if (lavaDropped) {
-                gameOver("Qahramon yondi! 🔥😵");
-            } else {
-                dropItem('hero', 380);
-                setTimeout(() => win(), 600);
-            }
+    // --- CYBER AMBIENT MUSIC ENGINE ---
+    function playMusic() {
+        if(!gameActive) return;
+        const now = audioCtx.currentTime;
+        
+        // Deep Bass Line
+        const bass = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        bass.type = 'sawtooth';
+        bass.frequency.setValueAtTime(55, now); // A1 note
+        bass.connect(g); g.connect(audioCtx.destination);
+        g.gain.setValueAtTime(0.03, now);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 2);
+        bass.start(); bass.stop(now + 2);
+
+        // High Pad
+        const pad = audioCtx.createOscillator();
+        pad.type = 'sine';
+        pad.frequency.setValueAtTime(440, now);
+        const g2 = audioCtx.createGain();
+        pad.connect(g2); g2.connect(audioCtx.destination);
+        g2.gain.setValueAtTime(0.01, now);
+        g2.gain.linearRampToValueAtTime(0, now + 4);
+        pad.start(); pad.stop(now + 4);
+
+        setTimeout(playMusic, 2000);
+    }
+
+    function playEffect(f, type, dur) {
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = type; osc.frequency.value = f;
+        osc.connect(g); g.connect(audioCtx.destination);
+        g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
+        osc.start(); osc.stop(audioCtx.currentTime + dur);
+    }
+
+    function startQuest() {
+        document.getElementById('start-screen').style.display = 'none';
+        gameActive = true;
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        playMusic();
+        spawnItems();
+        update();
+    }
+
+    function spawnItems() {
+        if(!gameActive) return;
+        if(enemies.length < 3) {
+            enemies.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, hp: 50 });
         }
+        if(crystals.length < 5) {
+            crystals.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height });
+        }
+        setTimeout(spawnItems, 3000);
     }
 
-    function dropItem(id, y) {
-        const el = document.getElementById(id);
-        el.style.top = y + "px";
-    }
+    window.onpointerdown = (e) => {
+        hero.targetX = e.clientX;
+        hero.targetY = e.clientY;
+    };
 
-    function win() {
-        document.getElementById('status').style.display = "flex";
-        document.getElementById('result-title').innerText = "G'ALABA! Xazina sizniki! 🏆";
-        document.getElementById('result-title').style.color = "#ffd700";
-    }
+    function update() {
+        if(!gameActive) return;
 
-    function gameOver(txt) {
-        document.getElementById('status').style.display = "flex";
-        document.getElementById('result-title').innerText = txt;
-        document.getElementById('result-title').style.color = "#ff5722";
+        ctx.fillStyle = '#0f0f1a';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Move Hero
+        hero.x += (hero.targetX - hero.x) * 0.1;
+        hero.y += (hero.targetY - hero.y) * 0.1;
+
+        // Draw Hero
+        ctx.shadowBlur = 15; ctx.shadowColor = '#00f3ff';
+        ctx.fillStyle = '#00f3ff';
+        ctx.fillRect(hero.x - 15, hero.y - 15, 30, 30);
+        ctx.shadowBlur = 0;
+
+        // Crystals
+        crystals.forEach((c, i) => {
+            ctx.fillStyle = '#ffd700';
+            ctx.beginPath(); ctx.arc(c.x, c.y, 8, 0, Math.PI*2); ctx.fill();
+            if(Math.hypot(hero.x - c.x, hero.y - c.y) < 30) {
+                rc += 10;
+                document.getElementById('rc').innerText = rc;
+                playEffect(880, 'sine', 0.1);
+                crystals.splice(i, 1);
+            }
+        });
+
+        // Enemies
+        enemies.forEach((en, i) => {
+            ctx.fillStyle = '#ff0055';
+            ctx.fillRect(en.x - 15, en.y - 15, 30, 30);
+            
+            let dist = Math.hypot(hero.x - en.x, hero.y - en.y);
+            if(dist < 100) { // Aggro
+                en.x += (hero.x - en.x) * 0.02;
+                en.y += (hero.y - en.y) * 0.02;
+            }
+
+            if(dist < 40) { // Attack
+                hp -= 0.5;
+                document.getElementById('hp').innerText = Math.floor(hp);
+                if(Math.random() > 0.9) playEffect(100, 'sawtooth', 0.1);
+                
+                // Hero attacks back
+                en.hp -= 2;
+                if(en.hp <= 0) {
+                    enemies.splice(i, 1);
+                    rc += 50;
+                    playEffect(400, 'square', 0.2);
+                }
+            }
+        });
+
+        if(hp <= 0) { gameActive = false; alert("REBOOT REQUIRED. RC: " + rc); location.reload(); }
+        requestAnimationFrame(update);
     }
 </script>
 </body>
