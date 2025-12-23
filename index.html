@@ -3,36 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>R-Ball: Gravity Pulse</title>
+    <title>R-Slasher: Cyber Blade</title>
     <style>
-        :root { --neon-blue: #00f3ff; --neon-pink: #ff00ff; --bg: #050508; }
+        :root { --neon-red: #ff0055; --neon-blue: #00f3ff; --bg: #050508; }
         body { margin: 0; overflow: hidden; background: var(--bg); color: white; font-family: 'Orbitron', sans-serif; touch-action: none; }
         
         #hud { position: fixed; top: 20px; width: 100%; display: flex; justify-content: space-around; z-index: 100; pointer-events: none; }
-        .stat { background: rgba(0, 0, 0, 0.8); padding: 10px 20px; border: 1px solid var(--neon-blue); border-radius: 5px; box-shadow: 0 0 15px var(--neon-blue); }
+        .stat { background: rgba(255, 0, 85, 0.1); padding: 10px 20px; border: 1px solid var(--neon-red); border-radius: 5px; box-shadow: 0 0 15px var(--neon-red); }
 
         canvas { display: block; }
 
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; text-align: center; }
-        button { padding: 15px 60px; font-size: 22px; background: var(--neon-pink); border: none; color: white; font-weight: bold; border-radius: 5px; cursor: pointer; margin-top: 30px; box-shadow: 0 0 25px var(--neon-pink); }
-        
-        .pulse-bg { position: fixed; inset: 0; border: 0px solid var(--neon-blue); pointer-events: none; transition: border 0.15s; }
+        button { padding: 15px 60px; font-size: 22px; background: var(--neon-red); border: none; color: white; font-weight: bold; border-radius: 5px; cursor: pointer; margin-top: 30px; box-shadow: 0 0 25px var(--neon-red); }
     </style>
 </head>
-<body onclick="jump()">
-
-<div id="pulse" class="pulse-bg"></div>
+<body>
 
 <div id="hud">
-    <div class="stat">SCORE: <span id="score">0</span></div>
+    <div class="stat">SLASHES: <span id="score">0</span></div>
     <div class="stat">RC: <span id="rc">0</span></div>
 </div>
 
 <div id="start-screen" class="overlay">
-    <h1 style="color: var(--neon-blue); font-size: 40px; margin:0;">GRAVITY PULSE</h1>
-    <p>Slower & Smoother Movement</p>
-    <p>Tap to jump and survive the beat!</p>
-    <button onclick="initGame(event)">START SYSTEM</button>
+    <h1 style="color: var(--neon-red); font-size: 45px; margin:0;">CYBER BLADE</h1>
+    <p>SLICE THE DATA NODES</p>
+    <p>Avoid the red core bombs!</p>
+    <button onclick="initGame(event)">ACTIVATE BLADE</button>
 </div>
 
 <canvas id="gameCanvas"></canvas>
@@ -40,31 +36,36 @@
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    const pulseLayer = document.getElementById('pulse');
     let gameActive = false, score = 0, rc = 0;
-
-    // Physics slowed down: gravity 0.4 -> 0.25, jump -10 -> -7
-    const ball = { x: 120, y: 0, r: 15, dy: 0, gravity: 0.25, jumpStrength: -7 };
-    let obstacles = [];
+    let items = [], trail = [];
+    
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-    function playBeat() {
+    // --- AGGRESSIVE CYBER MUSIC ---
+    function playBGM() {
         if(!gameActive) return;
         const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(40, now);
+        osc.frequency.linearRampToValueAtTime(80, now + 0.5);
+        g.gain.setValueAtTime(0.05, now);
+        g.gain.linearRampToValueAtTime(0, now + 0.5);
+        osc.connect(g); g.connect(audioCtx.destination);
+        osc.start(); osc.stop(now + 0.5);
+        setTimeout(playBGM, 500);
+    }
 
-        const kick = audioCtx.createOscillator();
-        const kickGain = audioCtx.createGain();
-        kick.frequency.setValueAtTime(120, now);
-        kick.frequency.exponentialRampToValueAtTime(0.01, now + 0.6);
-        kickGain.gain.setValueAtTime(0.2, now);
-        kickGain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
-        kick.connect(kickGain); kickGain.connect(audioCtx.destination);
-        kick.start(); kick.stop(now + 0.6);
-
-        pulseLayer.style.borderWidth = "10px";
-        setTimeout(() => pulseLayer.style.borderWidth = "0px", 150);
-
-        setTimeout(playBeat, 600); // Slower tempo (~100 BPM)
+    function playSliceSound() {
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.1);
+        g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        osc.connect(g); g.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
     }
 
     function initGame(e) {
@@ -72,81 +73,90 @@
         document.getElementById('start-screen').style.display = 'none';
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        ball.y = canvas.height / 2;
         gameActive = true;
         if(audioCtx.state === 'suspended') audioCtx.resume();
-        playBeat();
-        spawnObstacle();
+        playBGM();
+        spawnItem();
         update();
     }
 
-    function jump() {
+    function spawnItem() {
         if(!gameActive) return;
-        ball.dy = ball.jumpStrength;
-        const osc = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
-        osc.frequency.value = 500;
-        osc.connect(g); g.connect(audioCtx.destination);
-        g.gain.setValueAtTime(0.05, audioCtx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
-        osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+        items.push({
+            x: Math.random() * canvas.width,
+            y: canvas.height + 50,
+            dx: (Math.random() - 0.5) * 8,
+            dy: -15 - Math.random() * 10,
+            r: 30,
+            isBomb: Math.random() > 0.8,
+            sliced: false
+        });
+        setTimeout(spawnItem, 800);
     }
 
-    function spawnObstacle() {
+    window.onpointermove = (e) => {
         if(!gameActive) return;
-        const h = 80 + Math.random() * 150;
-        const isTop = Math.random() > 0.5;
-        obstacles.push({
-            x: canvas.width,
-            y: isTop ? 0 : canvas.height - h,
-            w: 40,
-            h: h,
-            color: isTop ? '#00f3ff' : '#ff00ff'
+        trail.push({ x: e.clientX, y: e.clientY, life: 10 });
+        if(trail.length > 15) trail.shift();
+
+        items.forEach(item => {
+            if(!item.sliced && Math.hypot(e.clientX - item.x, e.clientY - item.y) < item.r) {
+                if(item.isBomb) gameOver();
+                else {
+                    item.sliced = true;
+                    score++; rc += 5;
+                    document.getElementById('score').innerText = score;
+                    document.getElementById('rc').innerText = rc;
+                    playSliceSound();
+                }
+            }
         });
-        // Slower spawn rate: 1500 -> 2200ms
-        setTimeout(spawnObstacle, 2200);
-    }
+    };
 
     function update() {
         if(!gameActive) return;
-
-        ctx.fillStyle = 'rgba(5, 5, 8, 0.4)';
+        ctx.fillStyle = 'rgba(5, 5, 8, 0.3)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        ball.dy += ball.gravity;
-        ball.y += ball.dy;
+        // Draw Trail
+        ctx.beginPath();
+        ctx.strokeStyle = '#00f3ff';
+        ctx.lineWidth = 5;
+        trail.forEach((p, i) => {
+            if(i === 0) ctx.moveTo(p.x, p.y);
+            else ctx.lineTo(p.x, p.y);
+        });
+        ctx.stroke();
 
-        ctx.shadowBlur = 15; ctx.shadowColor = 'white';
-        ctx.fillStyle = 'white';
-        ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI*2); ctx.fill();
+        // Draw Items
+        items.forEach((item, i) => {
+            item.x += item.dx;
+            item.y += item.dy;
+            item.dy += 0.3; // Gravity
 
-        // Obstacle speed reduced: 4 -> 2.5
-        obstacles.forEach((ob, i) => {
-            ob.x -= 2.5;
-            ctx.shadowColor = ob.color;
-            ctx.fillStyle = ob.color;
-            ctx.fillRect(ob.x, ob.y, ob.w, ob.h);
-
-            if(ball.x + ball.r > ob.x && ball.x - ball.r < ob.x + ob.w) {
-                if(ball.y - ball.r < ob.y + ob.h && ball.y + ball.r > ob.y) gameOver();
+            if(!item.sliced) {
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = item.isBomb ? '#ff0055' : '#00f3ff';
+                ctx.fillStyle = ctx.shadowColor;
+                ctx.beginPath();
+                ctx.arc(item.x, item.y, item.r, 0, Math.PI*2);
+                ctx.fill();
+            } else {
+                // Draw half circles
+                ctx.fillStyle = '#00f3ff';
+                ctx.beginPath(); ctx.arc(item.x - 10, item.y, item.r/2, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(item.x + 10, item.y, item.r/2, 0, Math.PI*2); ctx.fill();
             }
 
-            if(ob.x < ball.x && !ob.scored) { 
-                ob.scored = true;
-                score++; rc += 5; 
-                document.getElementById('score').innerText = score;
-                document.getElementById('rc').innerText = rc;
-            }
-            if(ob.x < -50) obstacles.splice(i, 1);
+            if(item.y > canvas.height + 100) items.splice(i, 1);
         });
 
-        if(ball.y > canvas.height || ball.y < 0) gameOver();
         requestAnimationFrame(update);
     }
 
     function gameOver() {
         gameActive = false;
-        alert("PULSE INTERRUPTED!\nScore: " + score);
+        alert("CRITICAL SYSTEM FAILURE!\nScore: " + score);
         location.reload();
     }
 </script>
