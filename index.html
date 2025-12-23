@@ -14,10 +14,9 @@
         canvas { display: block; }
 
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; text-align: center; }
-        button { padding: 15px 60px; font-size: 22px; background: var(--neon-pink); border: none; color: white; font-weight: bold; border-radius: 5px; cursor: pointer; margin-top: 30px; box-shadow: 0 0 25px var(--neon-pink); text-transform: uppercase; }
+        button { padding: 15px 60px; font-size: 22px; background: var(--neon-pink); border: none; color: white; font-weight: bold; border-radius: 5px; cursor: pointer; margin-top: 30px; box-shadow: 0 0 25px var(--neon-pink); }
         
-        /* Beats Effect */
-        .pulse-bg { position: fixed; inset: 0; border: 0px solid var(--neon-blue); pointer-events: none; transition: border 0.1s; }
+        .pulse-bg { position: fixed; inset: 0; border: 0px solid var(--neon-blue); pointer-events: none; transition: border 0.15s; }
     </style>
 </head>
 <body onclick="jump()">
@@ -30,10 +29,10 @@
 </div>
 
 <div id="start-screen" class="overlay">
-    <h1 style="color: var(--neon-blue); font-size: 45px; margin:0;">GRAVITY PULSE</h1>
-    <p style="letter-spacing: 2px;">SYNC YOUR SOUL WITH THE BEAT</p>
-    <p>Tap to reverse gravity and stay alive!</p>
-    <button onclick="initGame(event)">START THE PULSE</button>
+    <h1 style="color: var(--neon-blue); font-size: 40px; margin:0;">GRAVITY PULSE</h1>
+    <p>Slower & Smoother Movement</p>
+    <p>Tap to jump and survive the beat!</p>
+    <button onclick="initGame(event)">START SYSTEM</button>
 </div>
 
 <canvas id="gameCanvas"></canvas>
@@ -44,40 +43,28 @@
     const pulseLayer = document.getElementById('pulse');
     let gameActive = false, score = 0, rc = 0;
 
-    const ball = { x: 100, y: 0, r: 15, dy: 0, gravity: 0.4, jumpStrength: -10 };
+    // Physics slowed down: gravity 0.4 -> 0.25, jump -10 -> -7
+    const ball = { x: 120, y: 0, r: 15, dy: 0, gravity: 0.25, jumpStrength: -7 };
     let obstacles = [];
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-    // --- FULL CONTINUOUS MUSIC ENGINE ---
     function playBeat() {
         if(!gameActive) return;
         const now = audioCtx.currentTime;
 
-        // 1. Kick Drum (Bass)
         const kick = audioCtx.createOscillator();
         const kickGain = audioCtx.createGain();
-        kick.frequency.setValueAtTime(150, now);
-        kick.frequency.exponentialRampToValueAtTime(0.01, now + 0.5);
-        kickGain.gain.setValueAtTime(0.3, now);
-        kickGain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+        kick.frequency.setValueAtTime(120, now);
+        kick.frequency.exponentialRampToValueAtTime(0.01, now + 0.6);
+        kickGain.gain.setValueAtTime(0.2, now);
+        kickGain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
         kick.connect(kickGain); kickGain.connect(audioCtx.destination);
-        kick.start(); kick.stop(now + 0.5);
+        kick.start(); kick.stop(now + 0.6);
 
-        // 2. Hi-Hat
-        const hat = audioCtx.createOscillator();
-        const hatGain = audioCtx.createGain();
-        hat.type = 'triangle';
-        hat.frequency.setValueAtTime(10000, now + 0.25);
-        hatGain.gain.setValueAtTime(0.05, now + 0.25);
-        hatGain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
-        hat.connect(hatGain); hatGain.connect(audioCtx.destination);
-        hat.start(now + 0.25); hat.stop(now + 0.35);
+        pulseLayer.style.borderWidth = "10px";
+        setTimeout(() => pulseLayer.style.borderWidth = "0px", 150);
 
-        // Visual Pulse
-        pulseLayer.style.borderWidth = "15px";
-        setTimeout(() => pulseLayer.style.borderWidth = "0px", 100);
-
-        setTimeout(playBeat, 500); // 120 BPM
+        setTimeout(playBeat, 600); // Slower tempo (~100 BPM)
     }
 
     function initGame(e) {
@@ -87,7 +74,6 @@
         canvas.height = window.innerHeight;
         ball.y = canvas.height / 2;
         gameActive = true;
-        
         if(audioCtx.state === 'suspended') audioCtx.resume();
         playBeat();
         spawnObstacle();
@@ -97,76 +83,70 @@
     function jump() {
         if(!gameActive) return;
         ball.dy = ball.jumpStrength;
-        // Interaction Sound
         const osc = audioCtx.createOscillator();
         const g = audioCtx.createGain();
-        osc.frequency.value = 600;
+        osc.frequency.value = 500;
         osc.connect(g); g.connect(audioCtx.destination);
-        g.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+        g.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
         osc.start(); osc.stop(audioCtx.currentTime + 0.2);
     }
 
     function spawnObstacle() {
         if(!gameActive) return;
-        const h = 100 + Math.random() * 200;
+        const h = 80 + Math.random() * 150;
         const isTop = Math.random() > 0.5;
         obstacles.push({
             x: canvas.width,
             y: isTop ? 0 : canvas.height - h,
-            w: 50,
+            w: 40,
             h: h,
             color: isTop ? '#00f3ff' : '#ff00ff'
         });
-        setTimeout(spawnObstacle, 1500);
+        // Slower spawn rate: 1500 -> 2200ms
+        setTimeout(spawnObstacle, 2200);
     }
 
     function update() {
         if(!gameActive) return;
 
-        ctx.fillStyle = 'rgba(5, 5, 8, 0.2)';
+        ctx.fillStyle = 'rgba(5, 5, 8, 0.4)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Ball Physics
         ball.dy += ball.gravity;
         ball.y += ball.dy;
 
-        // Draw Ball
-        ctx.shadowBlur = 20; ctx.shadowColor = 'white';
+        ctx.shadowBlur = 15; ctx.shadowColor = 'white';
         ctx.fillStyle = 'white';
         ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI*2); ctx.fill();
 
-        // Obstacles
+        // Obstacle speed reduced: 4 -> 2.5
         obstacles.forEach((ob, i) => {
-            ob.x -= 4;
+            ob.x -= 2.5;
             ctx.shadowColor = ob.color;
             ctx.fillStyle = ob.color;
             ctx.fillRect(ob.x, ob.y, ob.w, ob.h);
 
-            // Collision
             if(ball.x + ball.r > ob.x && ball.x - ball.r < ob.x + ob.w) {
-                if(ball.y - ball.r < ob.y + ob.h && ball.y + ball.r > ob.y) {
-                    gameOver();
-                }
+                if(ball.y - ball.r < ob.y + ob.h && ball.y + ball.r > ob.y) gameOver();
             }
 
-            if(ob.x === 80) { score++; rc += 10; updateHUD(); }
-            if(ob.x < -100) obstacles.splice(i, 1);
+            if(ob.x < ball.x && !ob.scored) { 
+                ob.scored = true;
+                score++; rc += 5; 
+                document.getElementById('score').innerText = score;
+                document.getElementById('rc').innerText = rc;
+            }
+            if(ob.x < -50) obstacles.splice(i, 1);
         });
 
         if(ball.y > canvas.height || ball.y < 0) gameOver();
-
         requestAnimationFrame(update);
-    }
-
-    function updateHUD() {
-        document.getElementById('score').innerText = score;
-        document.getElementById('rc').innerText = rc;
     }
 
     function gameOver() {
         gameActive = false;
-        alert("PULSE LOST! Score: " + score);
+        alert("PULSE INTERRUPTED!\nScore: " + score);
         location.reload();
     }
 </script>
