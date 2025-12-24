@@ -3,162 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>R-Slasher: Cyber Blade</title>
+    <title>R-Rescue: Deep Sea</title>
     <style>
-        :root { --neon-red: #ff0055; --neon-blue: #00f3ff; --bg: #050508; }
-        body { margin: 0; overflow: hidden; background: var(--bg); color: white; font-family: 'Orbitron', sans-serif; touch-action: none; }
-        
-        #hud { position: fixed; top: 20px; width: 100%; display: flex; justify-content: space-around; z-index: 100; pointer-events: none; }
-        .stat { background: rgba(255, 0, 85, 0.1); padding: 10px 20px; border: 1px solid var(--neon-red); border-radius: 5px; box-shadow: 0 0 15px var(--neon-red); }
-
-        canvas { display: block; }
-
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; text-align: center; }
-        button { padding: 15px 60px; font-size: 22px; background: var(--neon-red); border: none; color: white; font-weight: bold; border-radius: 5px; cursor: pointer; margin-top: 30px; box-shadow: 0 0 25px var(--neon-red); }
+        body { margin: 0; background: #001219; color: #fff; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+        #game-container { position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        canvas { background: linear-gradient(to bottom, #005f73, #001219); box-shadow: 0 0 50px #000 inset; }
+        #hud { position: absolute; top: 10px; width: 90%; display: flex; justify-content: space-between; font-size: 20px; font-weight: bold; pointer-events: none; }
+        .bar { width: 100px; height: 10px; background: #333; border-radius: 5px; overflow: hidden; display: inline-block; }
+        #oxygen-level { height: 100%; background: #00f3ff; width: 100%; transition: 0.3s; }
+        .controls { position: absolute; bottom: 30px; display: grid; grid-template-columns: repeat(3, 70px); gap: 15px; }
+        .btn { width: 70px; height: 70px; background: rgba(255,255,255,0.1); border: 2px solid #00f3ff; color: #00f3ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; user-select: none; }
     </style>
 </head>
 <body>
 
-<div id="hud">
-    <div class="stat">SLASHES: <span id="score">0</span></div>
-    <div class="stat">RC: <span id="rc">0</span></div>
+<div id="game-container">
+    <div id="hud">
+        <div>SCORE: <span id="score">0</span></div>
+        <div>OXYGEN: <div class="bar"><div id="oxygen-level"></div></div></div>
+    </div>
+    <canvas id="canvas"></canvas>
+    <div class="controls">
+        <div style="grid-column: 2" class="btn" onpointerdown="move('U')" onpointerup="stop()">▲</div>
+        <div style="grid-column: 1" class="btn" onpointerdown="move('L')" onpointerup="stop()">◀</div>
+        <div style="grid-column: 2" class="btn" onpointerdown="move('D')" onpointerup="stop()">▼</div>
+        <div style="grid-column: 3" class="btn" onpointerdown="move('R')" onpointerup="stop()">▶</div>
+    </div>
 </div>
-
-<div id="start-screen" class="overlay">
-    <h1 style="color: var(--neon-red); font-size: 45px; margin:0;">CYBER BLADE</h1>
-    <p>SLICE THE DATA NODES</p>
-    <p>Avoid the red core bombs!</p>
-    <button onclick="initGame(event)">ACTIVATE BLADE</button>
-</div>
-
-<canvas id="gameCanvas"></canvas>
 
 <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    let gameActive = false, score = 0, rc = 0;
-    let items = [], trail = [];
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('score');
+const oxEl = document.getElementById('oxygen-level');
+
+canvas.width = 400; canvas.height = 500;
+
+let score = 0, oxygen = 100, gameActive = true, musicStarted = false;
+const sub = { x: 200, y: 100, w: 40, h: 25, vx: 0, vy: 0 };
+let divers = [], enemies = [];
+
+// Musiqa generatori (Deep Sea Ambient)
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playDeepMusic() {
+    if (musicStarted) return; musicStarted = true;
+    setInterval(() => {
+        if(!gameActive) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(110 + Math.random() * 55, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 2);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 2);
+    }, 1500);
+}
+
+function move(dir) {
+    playDeepMusic();
+    const s = 4;
+    if(dir=='U') sub.vy = -s; if(dir=='D') sub.vy = s;
+    if(dir=='L') sub.vx = -s; if(dir=='R') sub.vx = s;
+}
+function stop() { sub.vx = 0; sub.vy = 0; }
+
+function spawn() {
+    if(Math.random() < 0.02) divers.push({x: Math.random()*380, y: 520, type: 'diver'});
+    if(Math.random() < 0.03) enemies.push({x: 420, y: 200 + Math.random()*300, s: 2 + Math.random()*3});
+}
+
+function update() {
+    if(!gameActive) return;
+    sub.x += sub.vx; sub.y += sub.vy;
+    oxygen -= 0.1;
+    oxEl.style.width = oxygen + "%";
+
+    if(oxygen <= 0) endGame("OUT OF OXYGEN!");
+    if(sub.x < 0 || sub.x > 360 || sub.y < 0 || sub.y > 475) sub.x = Math.max(0, Math.min(360, sub.x)), sub.y = Math.max(0, Math.min(475, sub.y));
+
+    divers.forEach((d, i) => {
+        d.y -= 1; // Suv oqimi bilan yuqoriga chiqish
+        if(Math.abs(sub.x - d.x) < 30 && Math.abs(sub.y - d.y) < 30) {
+            divers.splice(i, 1); score += 10; scoreEl.innerText = score; oxygen = Math.min(100, oxygen + 20);
+        }
+    });
+
+    enemies.forEach((e, i) => {
+        e.x -= e.s;
+        if(Math.abs(sub.x - e.x) < 25 && Math.abs(sub.y - e.y) < 25) endGame("COLLIDED WITH SHARK!");
+    });
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // Suvosti kemasi (Submarine)
+    ctx.fillStyle = "#e9d8a6";
+    ctx.beginPath(); ctx.roundRect(sub.x, sub.y, sub.w, sub.h, 10); ctx.fill();
+    ctx.fillStyle = "#00f3ff"; ctx.fillRect(sub.x + 25, sub.y + 5, 10, 10); // Oyna
 
-    // --- AGGRESSIVE CYBER MUSIC ---
-    function playBGM() {
-        if(!gameActive) return;
-        const now = audioCtx.currentTime;
-        const osc = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(40, now);
-        osc.frequency.linearRampToValueAtTime(80, now + 0.5);
-        g.gain.setValueAtTime(0.05, now);
-        g.gain.linearRampToValueAtTime(0, now + 0.5);
-        osc.connect(g); g.connect(audioCtx.destination);
-        osc.start(); osc.stop(now + 0.5);
-        setTimeout(playBGM, 500);
-    }
+    // G'avvoslar (Divers)
+    ctx.fillStyle = "#ee9b00";
+    divers.forEach(d => { ctx.beginPath(); ctx.arc(d.x, d.y, 8, 0, 7); ctx.fill(); });
 
-    function playSliceSound() {
-        const osc = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.1);
-        g.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        osc.connect(g); g.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-    }
+    // Akulalar (Enemies)
+    ctx.fillStyle = "#ae2012";
+    enemies.forEach(e => {
+        ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(e.x+20, e.y-10); ctx.lineTo(e.x+20, e.y+10); ctx.fill();
+    });
 
-    function initGame(e) {
-        e.stopPropagation();
-        document.getElementById('start-screen').style.display = 'none';
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        gameActive = true;
-        if(audioCtx.state === 'suspended') audioCtx.resume();
-        playBGM();
-        spawnItem();
-        update();
-    }
+    update();
+    spawn();
+    requestAnimationFrame(draw);
+}
 
-    function spawnItem() {
-        if(!gameActive) return;
-        items.push({
-            x: Math.random() * canvas.width,
-            y: canvas.height + 50,
-            dx: (Math.random() - 0.5) * 8,
-            dy: -15 - Math.random() * 10,
-            r: 30,
-            isBomb: Math.random() > 0.8,
-            sliced: false
-        });
-        setTimeout(spawnItem, 800);
-    }
+function endGame(msg) {
+    gameActive = false;
+    alert(msg + "\nFinal Score: " + score);
+    location.reload();
+}
 
-    window.onpointermove = (e) => {
-        if(!gameActive) return;
-        trail.push({ x: e.clientX, y: e.clientY, life: 10 });
-        if(trail.length > 15) trail.shift();
-
-        items.forEach(item => {
-            if(!item.sliced && Math.hypot(e.clientX - item.x, e.clientY - item.y) < item.r) {
-                if(item.isBomb) gameOver();
-                else {
-                    item.sliced = true;
-                    score++; rc += 5;
-                    document.getElementById('score').innerText = score;
-                    document.getElementById('rc').innerText = rc;
-                    playSliceSound();
-                }
-            }
-        });
-    };
-
-    function update() {
-        if(!gameActive) return;
-        ctx.fillStyle = 'rgba(5, 5, 8, 0.3)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // Draw Trail
-        ctx.beginPath();
-        ctx.strokeStyle = '#00f3ff';
-        ctx.lineWidth = 5;
-        trail.forEach((p, i) => {
-            if(i === 0) ctx.moveTo(p.x, p.y);
-            else ctx.lineTo(p.x, p.y);
-        });
-        ctx.stroke();
-
-        // Draw Items
-        items.forEach((item, i) => {
-            item.x += item.dx;
-            item.y += item.dy;
-            item.dy += 0.3; // Gravity
-
-            if(!item.sliced) {
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = item.isBomb ? '#ff0055' : '#00f3ff';
-                ctx.fillStyle = ctx.shadowColor;
-                ctx.beginPath();
-                ctx.arc(item.x, item.y, item.r, 0, Math.PI*2);
-                ctx.fill();
-            } else {
-                // Draw half circles
-                ctx.fillStyle = '#00f3ff';
-                ctx.beginPath(); ctx.arc(item.x - 10, item.y, item.r/2, 0, Math.PI*2); ctx.fill();
-                ctx.beginPath(); ctx.arc(item.x + 10, item.y, item.r/2, 0, Math.PI*2); ctx.fill();
-            }
-
-            if(item.y > canvas.height + 100) items.splice(i, 1);
-        });
-
-        requestAnimationFrame(update);
-    }
-
-    function gameOver() {
-        gameActive = false;
-        alert("CRITICAL SYSTEM FAILURE!\nScore: " + score);
-        location.reload();
-    }
+draw();
 </script>
 </body>
 </html>
