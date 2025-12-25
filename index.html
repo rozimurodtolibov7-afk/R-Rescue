@@ -1,128 +1,165 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uz">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>R-Rescue: Deep Sea</title>
+    <title>R-Rescue: Cognitive Flow</title>
     <style>
-        body { margin: 0; background: #001219; color: #fff; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
-        #game-container { position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
-        canvas { background: linear-gradient(to bottom, #005f73, #001219); box-shadow: 0 0 50px #000 inset; }
-        #hud { position: absolute; top: 10px; width: 90%; display: flex; justify-content: space-between; font-size: 20px; font-weight: bold; pointer-events: none; }
-        .bar { width: 100px; height: 10px; background: #333; border-radius: 5px; overflow: hidden; display: inline-block; }
-        #oxygen-level { height: 100%; background: #00f3ff; width: 100%; transition: 0.3s; }
-        .controls { position: absolute; bottom: 30px; display: grid; grid-template-columns: repeat(3, 70px); gap: 15px; }
-        .btn { width: 70px; height: 70px; background: rgba(255,255,255,0.1); border: 2px solid #00f3ff; color: #00f3ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; user-select: none; }
+        :root { --core: #fff; --good: #2ecc71; --bad: #e74c3c; --neutral: #f1c40f; }
+        body { margin: 0; background: #08080c; overflow: hidden; font-family: 'Monaco', monospace; color: #fff; }
+        #ui { position: absolute; top: 20px; width: 100%; display: flex; justify-content: space-around; z-index: 10; }
+        .stat { font-size: 14px; letter-spacing: 2px; }
+        #core-health { width: 150px; height: 4px; background: #222; margin-top: 10px; border-radius: 2px; }
+        #health-fill { width: 100%; height: 100%; background: var(--good); transition: 0.3s; }
+        canvas { display: block; }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <div id="hud">
-        <div>SCORE: <span id="score">0</span></div>
-        <div>OXYGEN: <div class="bar"><div id="oxygen-level"></div></div></div>
-    </div>
-    <canvas id="canvas"></canvas>
-    <div class="controls">
-        <div style="grid-column: 2" class="btn" onpointerdown="move('U')" onpointerup="stop()">▲</div>
-        <div style="grid-column: 1" class="btn" onpointerdown="move('L')" onpointerup="stop()">◀</div>
-        <div style="grid-column: 2" class="btn" onpointerdown="move('D')" onpointerup="stop()">▼</div>
-        <div style="grid-column: 3" class="btn" onpointerdown="move('R')" onpointerup="stop()">▶</div>
-    </div>
+<div id="ui">
+    <div class="stat">COGNITIVE LOAD: <span id="score">0</span>%</div>
+    <div class="stat">CORE INTEGRITY <div id="core-health"><div id="health-fill"></div></div></div>
 </div>
 
+<canvas id="flowCanvas"></canvas>
+
 <script>
-const canvas = document.getElementById('canvas');
+const canvas = document.getElementById('flowCanvas');
 const ctx = canvas.getContext('2d');
-const scoreEl = document.getElementById('score');
-const oxEl = document.getElementById('oxygen-level');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-canvas.width = 400; canvas.height = 500;
+let nodes = [], score = 0, integrity = 100, gameActive = true;
+const corePos = { x: canvas.width/2, y: canvas.height/2, r: 40 };
 
-let score = 0, oxygen = 100, gameActive = true, musicStarted = false;
-const sub = { x: 200, y: 100, w: 40, h: 25, vx: 0, vy: 0 };
-let divers = [], enemies = [];
-
-// Musiqa generatori (Deep Sea Ambient)
+// Gamma Wave Audio (40Hz focusing frequency)
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-function playDeepMusic() {
-    if (musicStarted) return; musicStarted = true;
-    setInterval(() => {
-        if(!gameActive) return;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(110 + Math.random() * 55, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 2);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + 2);
-    }, 1500);
+function playFocusFrequency() {
+    const masterGain = audioCtx.createGain();
+    masterGain.gain.setValueAtTime(0.02, audioCtx.currentTime);
+    masterGain.connect(audioCtx.destination);
+
+    const osc1 = audioCtx.createOscillator();
+    osc1.frequency.value = 200;
+    osc1.connect(masterGain);
+
+    const osc2 = audioCtx.createOscillator();
+    osc2.frequency.value = 240; // Binaural beat 40Hz
+    osc2.connect(masterGain);
+
+    osc1.start(); osc2.start();
 }
 
-function move(dir) {
-    playDeepMusic();
-    const s = 4;
-    if(dir=='U') sub.vy = -s; if(dir=='D') sub.vy = s;
-    if(dir=='L') sub.vx = -s; if(dir=='R') sub.vx = s;
+function playSoundEffect(freq, type) {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = type; o.frequency.value = freq;
+    o.connect(g); g.connect(audioCtx.destination);
+    g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+    o.start(); o.stop(audioCtx.currentTime + 0.3);
 }
-function stop() { sub.vx = 0; sub.vy = 0; }
+
+class Node {
+    constructor() {
+        const side = Math.floor(Math.random() * 4);
+        if(side === 0) { this.x = Math.random()*canvas.width; this.y = -20; }
+        else if(side === 1) { this.x = canvas.width+20; this.y = Math.random()*canvas.height; }
+        else if(side === 2) { this.x = Math.random()*canvas.width; this.y = canvas.height+20; }
+        else { this.x = -20; this.y = Math.random()*canvas.height; }
+
+        this.type = Math.random() > 0.6 ? 'bad' : (Math.random() > 0.3 ? 'good' : 'neutral');
+        this.s = 1 + Math.random() * 1.5;
+        this.r = 10;
+        this.isDragged = false;
+    }
+    update() {
+        if(!this.isDragged) {
+            const angle = Math.atan2(corePos.y - this.y, corePos.x - this.x);
+            this.x += Math.cos(angle) * this.s;
+            this.y += Math.sin(angle) * this.s;
+        }
+
+        const dist = Math.sqrt((this.x - corePos.x)**2 + (this.y - corePos.y)**2);
+        if(dist < corePos.r) this.resolve();
+    }
+    resolve() {
+        if(this.type === 'good') {
+            score += 5;
+            playSoundEffect(600, 'sine');
+        } else if(this.type === 'bad') {
+            integrity -= 15;
+            playSoundEffect(150, 'sawtooth');
+        }
+        this.kill();
+    }
+    kill() {
+        nodes = nodes.filter(n => n !== this);
+        if(integrity <= 0) gameOver();
+    }
+}
 
 function spawn() {
-    if(Math.random() < 0.02) divers.push({x: Math.random()*380, y: 520, type: 'diver'});
-    if(Math.random() < 0.03) enemies.push({x: 420, y: 200 + Math.random()*300, s: 2 + Math.random()*3});
-}
-
-function update() {
-    if(!gameActive) return;
-    sub.x += sub.vx; sub.y += sub.vy;
-    oxygen -= 0.1;
-    oxEl.style.width = oxygen + "%";
-
-    if(oxygen <= 0) endGame("OUT OF OXYGEN!");
-    if(sub.x < 0 || sub.x > 360 || sub.y < 0 || sub.y > 475) sub.x = Math.max(0, Math.min(360, sub.x)), sub.y = Math.max(0, Math.min(475, sub.y));
-
-    divers.forEach((d, i) => {
-        d.y -= 1; // Suv oqimi bilan yuqoriga chiqish
-        if(Math.abs(sub.x - d.x) < 30 && Math.abs(sub.y - d.y) < 30) {
-            divers.splice(i, 1); score += 10; scoreEl.innerText = score; oxygen = Math.min(100, oxygen + 20);
-        }
-    });
-
-    enemies.forEach((e, i) => {
-        e.x -= e.s;
-        if(Math.abs(sub.x - e.x) < 25 && Math.abs(sub.y - e.y) < 25) endGame("COLLIDED WITH SHARK!");
-    });
+    if(Math.random() < 0.03 + (score/2000)) nodes.push(new Node());
 }
 
 function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'rgba(8, 8, 12, 0.3)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw Core
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = `rgba(255, 255, 255, ${0.2 + Math.sin(Date.now()/500)*0.1})`;
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(corePos.x, corePos.y, corePos.r, 0, Math.PI*2); ctx.stroke();
     
-    // Suvosti kemasi (Submarine)
-    ctx.fillStyle = "#e9d8a6";
-    ctx.beginPath(); ctx.roundRect(sub.x, sub.y, sub.w, sub.h, 10); ctx.fill();
-    ctx.fillStyle = "#00f3ff"; ctx.fillRect(sub.x + 25, sub.y + 5, 10, 10); // Oyna
+    // Core Pulse
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.beginPath(); ctx.arc(corePos.x, corePos.y, corePos.r + Math.sin(Date.now()/200)*5, 0, Math.PI*2); ctx.fill();
 
-    // G'avvoslar (Divers)
-    ctx.fillStyle = "#ee9b00";
-    divers.forEach(d => { ctx.beginPath(); ctx.arc(d.x, d.y, 8, 0, 7); ctx.fill(); });
-
-    // Akulalar (Enemies)
-    ctx.fillStyle = "#ae2012";
-    enemies.forEach(e => {
-        ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(e.x+20, e.y-10); ctx.lineTo(e.x+20, e.y+10); ctx.fill();
+    nodes.forEach(n => {
+        n.update();
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = n.type === 'good' ? '#2ecc71' : (n.type === 'bad' ? '#e74c3c' : '#f1c40f');
+        ctx.shadowColor = ctx.fillStyle;
+        ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI*2); ctx.fill();
     });
 
-    update();
-    spawn();
-    requestAnimationFrame(draw);
+    document.getElementById('score').innerText = score;
+    document.getElementById('health-fill').style.width = integrity + '%';
+
+    if(gameActive) {
+        spawn();
+        requestAnimationFrame(draw);
+    }
 }
 
-function endGame(msg) {
+// Interaction: Drag away BAD nodes
+canvas.addEventListener('pointermove', e => {
+    nodes.forEach(n => {
+        const d = Math.sqrt((e.clientX - n.x)**2 + (e.clientY - n.y)**2);
+        if(d < 40 && n.type === 'bad') {
+            n.x = -100; // Trash the bad node
+            n.kill();
+            score += 2;
+            playSoundEffect(800, 'sine');
+        }
+    });
+});
+
+function gameOver() {
     gameActive = false;
-    alert(msg + "\nFinal Score: " + score);
+    alert("Kognitiv yuklama ortdi! Saralangan bilimlar: " + score);
     location.reload();
 }
+
+window.addEventListener('mousedown', () => {
+    if(audioCtx.state === 'suspended') {
+        audioCtx.resume();
+        playFocusFrequency();
+    }
+});
 
 draw();
 </script>
