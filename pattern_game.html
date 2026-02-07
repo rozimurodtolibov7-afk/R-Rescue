@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔷 Naqsh Eslash O'yini</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #00d2ff;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border-radius: 15px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #00d2ff;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .game-instructions {
+            text-align: center;
+            font-size: 1.3em;
+            color: #666;
+            margin: 25px 0;
+            padding: 20px;
+            background: #f0f8ff;
+            border-radius: 15px;
+            font-weight: bold;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pattern-display {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+        }
+
+        .pattern-cell {
+            aspect-ratio: 1;
+            background: #e2e8f0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid transparent;
+        }
+
+        .pattern-cell:hover:not(.disabled) {
+            transform: scale(1.05);
+            border-color: #00d2ff;
+        }
+
+        .pattern-cell.active {
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.5);
+        }
+
+        .pattern-cell.user-selected {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            animation: pulse 0.3s ease;
+        }
+
+        .pattern-cell.wrong {
+            background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
+            animation: shake 0.5s ease;
+        }
+
+        .pattern-cell.disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .feedback {
+            text-align: center;
+            font-size: 1.4em;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-weight: bold;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .feedback.success {
+            background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
+            color: #22543d;
+        }
+
+        .feedback.error {
+            background: linear-gradient(135deg, #fed7d7 0%, #fc8181 100%);
+            color: #742a2a;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin: 10px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .level-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #000;
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin: 15px 0;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .lives {
+            text-align: center;
+            font-size: 2em;
+            margin: 15px 0;
+        }
+
+        .game-over {
+            text-align: center;
+            padding: 40px;
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            border-radius: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .game-over.show {
+            display: block;
+            animation: slideDown 0.5s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .game-over h2 {
+            color: #00d2ff;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+        }
+
+        .progress-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 20px 0;
+        }
+
+        .progress-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            transition: all 0.3s;
+        }
+
+        .progress-dot.active {
+            background: #00d2ff;
+            transform: scale(1.3);
+        }
+
+        .countdown {
+            text-align: center;
+            font-size: 4em;
+            color: #00d2ff;
+            font-weight: bold;
+            margin: 40px 0;
+            display: none;
+        }
+
+        .countdown.show {
+            display: block;
+            animation: countPulse 1s ease-in-out;
+        }
+
+        @keyframes countPulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔷 Naqsh Eslash</h1>
+        <p class="subtitle">Naqshni kuzating va takrorlang!</p>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="level">1</div>
+                <div class="stat-label">Daraja</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="score">0</div>
+                <div class="stat-label">Ball</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="highestLevel">1</div>
+                <div class="stat-label">Eng Yuqori</div>
+            </div>
+        </div>
+
+        <div id="gameArea">
+            <div class="lives" id="lives">❤️ ❤️ ❤️</div>
+
+            <div class="game-instructions" id="instructions">
+                Boshlash uchun tugmani bosing
+            </div>
+
+            <div class="progress-indicator" id="progressIndicator"></div>
+
+            <div class="countdown" id="countdown"></div>
+
+            <div class="pattern-display" id="patternGrid"></div>
+
+            <div class="feedback" id="feedback"></div>
+
+            <div class="controls">
+                <button class="btn" id="startBtn" onclick="startGame()">🎮 Boshlash</button>
+                <button class="btn" id="repeatBtn" onclick="repeatPattern()" style="display: none;">🔁 Qayta Ko'rsatish</button>
+            </div>
+        </div>
+
+        <div class="game-over" id="gameOver">
+            <h2>🎮 O'yin Tugadi!</h2>
+            <div class="level-badge">
+                Erishgan Daraja: <span id="finalLevel">1</span>
+            </div>
+            <p style="font-size: 1.3em; margin: 20px 0; color: #666;">
+                Ball: <strong id="finalScore" style="color: #00d2ff;">0</strong>
+            </p>
+            <p id="newHighScore" style="color: #ffd700; font-size: 1.5em; font-weight: bold; display: none;">
+                🏆 YANGI REKORD!
+            </p>
+            <button class="btn" onclick="resetGame()">Qayta O'ynash</button>
+        </div>
+    </div>
+
+    <script>
+        // Audio Context for sound effects
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let isMusicPlaying = false;
+
+        // Sound effects
+        function playPatternSound(index) {
+            const baseFreq = 400 + (index * 50);
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.type = 'sine';
+            oscillator.frequency.value = baseFreq;
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+        }
+
+        function playSuccessSound() {
+            const notes = [523, 659, 784, 1047];
+            notes.forEach((freq, index) => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.type = 'triangle';
+                oscillator.frequency.value = freq;
+                
+                const startTime = audioContext.currentTime + (index * 0.1);
+                gainNode.gain.setValueAtTime(0.25, startTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.2);
+                
+                oscillator.start(startTime);
+                oscillator.stop(startTime + 0.2);
+            });
+        }
+
+        function playErrorSound() {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.value = 180;
+            
+            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.4);
+        }
+
+        let level = 1;
+        let score = 0;
+        let lives = 3;
+        let patternSequence = [];
+        let userSequence = [];
+        let isShowing = false;
+        let canRepeat = true;
+        let highestLevel = localStorage.getItem('patternHighestLevel') || 1;
+
+        document.getElementById('highestLevel').textContent = highestLevel;
+
+        function createGrid() {
+            const grid = document.getElementById('patternGrid');
+            grid.innerHTML = '';
+            
+            for (let i = 0; i < 16; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'pattern-cell';
+                cell.dataset.index = i;
+                cell.onclick = () => handleCellClick(i);
+                grid.appendChild(cell);
+            }
+        }
+
+        function startGame() {
+            level = 1;
+            score = 0;
+            lives = 3;
+            
+            document.getElementById('level').textContent = level;
+            document.getElementById('score').textContent = score;
+            updateLives();
+            
+            document.getElementById('gameOver').classList.remove('show');
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('feedback').classList.remove('show');
+            
+            createGrid();
+            showCountdown(3, () => showPattern());
+        }
+
+        function showCountdown(num, callback) {
+            const countdown = document.getElementById('countdown');
+            const grid = document.getElementById('patternGrid');
+            
+            grid.style.opacity = '0.3';
+            document.getElementById('instructions').textContent = 'Tayyor bo\'ling...';
+            
+            let current = num;
+            countdown.textContent = current;
+            countdown.classList.add('show');
+            
+            const interval = setInterval(() => {
+                current--;
+                if (current > 0) {
+                    countdown.textContent = current;
+                    countdown.classList.remove('show');
+                    setTimeout(() => countdown.classList.add('show'), 50);
+                } else {
+                    clearInterval(interval);
+                    countdown.classList.remove('show');
+                    grid.style.opacity = '1';
+                    if (callback) callback();
+                }
+            }, 1000);
+        }
+
+        function showPattern() {
+            isShowing = true;
+            canRepeat = true;
+            patternSequence = [];
+            userSequence = [];
+            
+            // Calculate sequence length based on level
+            const sequenceLength = Math.min(3 + level, 12);
+            
+            // Generate unique random sequence
+            const availableCells = Array.from({length: 16}, (_, i) => i);
+            for (let i = 0; i < sequenceLength; i++) {
+                const randomIndex = Math.floor(Math.random() * availableCells.length);
+                patternSequence.push(availableCells[randomIndex]);
+                availableCells.splice(randomIndex, 1);
+            }
+
+            document.getElementById('instructions').textContent = 'Naqshni diqqat bilan kuzating!';
+            document.getElementById('repeatBtn').style.display = 'none';
+            
+            // Create progress indicator
+            updateProgressIndicator(0);
+            
+            // Disable all cells
+            document.querySelectorAll('.pattern-cell').forEach(cell => {
+                cell.classList.add('disabled');
+            });
+
+            let index = 0;
+            const interval = setInterval(() => {
+                if (index > 0) {
+                    const prevCell = document.querySelector(`[data-index="${patternSequence[index-1]}"]`);
+                    prevCell.classList.remove('active');
+                }
+                
+                if (index < patternSequence.length) {
+                    const cell = document.querySelector(`[data-index="${patternSequence[index]}"]`);
+                    cell.classList.add('active');
+                    playPatternSound(index);
+                    updateProgressIndicator(index + 1);
+                    index++;
+                } else {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        document.querySelectorAll('.pattern-cell').forEach(cell => {
+                            cell.classList.remove('active', 'disabled');
+                        });
+                        document.getElementById('instructions').textContent = 'Endi naqshni takrorlang!';
+                        document.getElementById('repeatBtn').style.display = 'inline-block';
+                        isShowing = false;
+                    }, 600);
+                }
+            }, 800);
+        }
+
+        function updateProgressIndicator(current) {
+            const indicator = document.getElementById('progressIndicator');
+            indicator.innerHTML = '';
+            
+            for (let i = 0; i < patternSequence.length; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'progress-dot';
+                if (i < current) {
+                    dot.classList.add('active');
+                }
+                indicator.appendChild(dot);
+            }
+        }
+
+        function handleCellClick(index) {
+            if (isShowing) return;
+            
+            const cell = document.querySelector(`[data-index="${index}"]`);
+            cell.classList.add('user-selected');
+            playPatternSound(userSequence.length);
+            userSequence.push(index);
+
+            setTimeout(() => cell.classList.remove('user-selected'), 300);
+
+            // Check if current click is correct
+            const currentStep = userSequence.length - 1;
+            if (userSequence[currentStep] !== patternSequence[currentStep]) {
+                // Wrong pattern
+                cell.classList.add('wrong');
+                playErrorSound();
+                setTimeout(() => cell.classList.remove('wrong'), 500);
+                
+                handleWrongPattern();
+                return;
+            }
+
+            // Update progress
+            updateProgressIndicator(userSequence.length);
+
+            // Check if pattern is complete
+            if (userSequence.length === patternSequence.length) {
+                handleCorrectPattern();
+            }
+        }
+
+        function handleCorrectPattern() {
+            canRepeat = false;
+            playSuccessSound();
+            document.querySelectorAll('.pattern-cell').forEach(cell => {
+                cell.classList.add('disabled');
+            });
+
+            const feedback = document.getElementById('feedback');
+            feedback.className = 'feedback success show';
+            feedback.innerHTML = '🎉 Ajoyib! To\'g\'ri!';
+
+            // Calculate score
+            const levelBonus = level * 10;
+            const speedBonus = canRepeat ? 20 : 10;
+            score += 50 + levelBonus + speedBonus;
+            document.getElementById('score').textContent = score;
+
+            setTimeout(() => {
+                level++;
+                document.getElementById('level').textContent = level;
+                
+                if (level > highestLevel) {
+                    highestLevel = level;
+                    localStorage.setItem('patternHighestLevel', highestLevel);
+                    document.getElementById('highestLevel').textContent = highestLevel;
+                }
+
+                feedback.classList.remove('show');
+                showCountdown(2, () => showPattern());
+            }, 2000);
+        }
+
+        function handleWrongPattern() {
+            lives--;
+            updateLives();
+
+            const feedback = document.getElementById('feedback');
+            feedback.className = 'feedback error show';
+            
+            if (lives > 0) {
+                feedback.innerHTML = `❌ Noto'g'ri! Qaytadan urinib ko'ring!<br>Qolgan urinishlar: ${lives}`;
+                
+                setTimeout(() => {
+                    feedback.classList.remove('show');
+                    userSequence = [];
+                    updateProgressIndicator(0);
+                }, 2000);
+            } else {
+                feedback.innerHTML = '💔 Barcha urinishlar tugadi!';
+                
+                setTimeout(() => {
+                    endGame();
+                }, 2000);
+            }
+        }
+
+        function repeatPattern() {
+            if (!canRepeat || isShowing) return;
+            
+            canRepeat = false;
+            document.getElementById('repeatBtn').disabled = true;
+            
+            // Show pattern again
+            isShowing = true;
+            userSequence = [];
+            updateProgressIndicator(0);
+            
+            document.getElementById('instructions').textContent = 'Naqsh takrorlanmoqda...';
+            
+            document.querySelectorAll('.pattern-cell').forEach(cell => {
+                cell.classList.add('disabled');
+            });
+
+            let index = 0;
+            const interval = setInterval(() => {
+                if (index > 0) {
+                    const prevCell = document.querySelector(`[data-index="${patternSequence[index-1]}"]`);
+                    prevCell.classList.remove('active');
+                }
+                
+                if (index < patternSequence.length) {
+                    const cell = document.querySelector(`[data-index="${patternSequence[index]}"]`);
+                    cell.classList.add('active');
+                    updateProgressIndicator(index + 1);
+                    index++;
+                } else {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        document.querySelectorAll('.pattern-cell').forEach(cell => {
+                            cell.classList.remove('active', 'disabled');
+                        });
+                        document.getElementById('instructions').textContent = 'Endi naqshni takrorlang!';
+                        isShowing = false;
+                        updateProgressIndicator(0);
+                    }, 600);
+                }
+            }, 800);
+        }
+
+        function updateLives() {
+            const heartsArray = ['❤️', '❤️', '❤️'];
+            const hearts = heartsArray.slice(0, lives).join(' ');
+            const emptyHearts = '🖤 '.repeat(3 - lives);
+            document.getElementById('lives').innerHTML = hearts + ' ' + emptyHearts;
+        }
+
+        function endGame() {
+            document.getElementById('gameArea').style.display = 'none';
+            document.getElementById('gameOver').classList.add('show');
+            
+            document.getElementById('finalLevel').textContent = level;
+            document.getElementById('finalScore').textContent = score;
+            
+            if (level > localStorage.getItem('patternHighestLevel') || 1) {
+                document.getElementById('newHighScore').style.display = 'block';
+            } else {
+                document.getElementById('newHighScore').style.display = 'none';
+            }
+        }
+
+        function resetGame() {
+            document.getElementById('gameArea').style.display = 'block';
+            document.getElementById('gameOver').classList.remove('show');
+            document.getElementById('startBtn').style.display = 'inline-block';
+            document.getElementById('repeatBtn').style.display = 'none';
+            document.getElementById('instructions').textContent = 'Boshlash uchun tugmani bosing';
+            document.getElementById('patternGrid').innerHTML = '';
+            document.getElementById('progressIndicator').innerHTML = '';
+        }
+
+        // Initialize grid on load
+        createGrid();
+        document.querySelectorAll('.pattern-cell').forEach(cell => {
+            cell.classList.add('disabled');
+        });
+    </script>
+</body>
+</html>
