@@ -1,162 +1,747 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>R-Rescue: Cognitive Shield</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📝 So'z Xotirasi O'yini</title>
     <style>
-        :root { --core: #fff; --good: #2ecc71; --bad: #e74c3c; --neutral: #f1c40f; }
-        body { margin: 0; background: #050508; overflow: hidden; font-family: 'Segoe UI', sans-serif; color: #fff; touch-action: none; }
-        #ui { position: absolute; top: 20px; width: 100%; display: flex; justify-content: space-around; z-index: 10; pointer-events: none; }
-        .stat { font-size: 13px; letter-spacing: 2px; font-weight: bold; text-transform: uppercase; }
-        #core-health { width: 120px; height: 6px; background: #222; margin-top: 5px; border-radius: 3px; overflow: hidden; }
-        #health-fill { width: 100%; height: 100%; background: var(--good); transition: 0.4s; }
-        canvas { display: block; }
-        .hint { position: absolute; bottom: 20px; width: 100%; text-align: center; font-size: 11px; opacity: 0.4; letter-spacing: 1px; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 700px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: white;
+        }
+
+        .stat-label {
+            color: white;
+            font-size: 0.9em;
+            margin-top: 5px;
+            opacity: 0.9;
+        }
+
+        .game-mode {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .mode-btn {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .game-instructions {
+            text-align: center;
+            font-size: 1.3em;
+            color: #666;
+            margin: 25px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border-radius: 15px;
+            font-weight: bold;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .words-display {
+            text-align: center;
+            min-height: 200px;
+            margin: 30px 0;
+            padding: 30px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .word-item {
+            font-size: 2.5em;
+            color: #667eea;
+            font-weight: bold;
+            margin: 10px 0;
+            opacity: 0;
+            animation: fadeInOut 2s ease-in-out;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: scale(0.8); }
+            20% { opacity: 1; transform: scale(1.1); }
+            80% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.8); }
+        }
+
+        .input-area {
+            display: none;
+            margin: 30px 0;
+        }
+
+        .input-area.show {
+            display: block;
+        }
+
+        .word-input {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.3em;
+            border: 3px solid #667eea;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .word-input:focus {
+            border-color: #764ba2;
+            box-shadow: 0 0 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .word-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+            justify-content: center;
+        }
+
+        .word-chip {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #333;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            animation: popIn 0.3s ease;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin: 10px 5px;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
+
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .feedback {
+            text-align: center;
+            font-size: 1.4em;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-weight: bold;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .feedback.success {
+            background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
+            color: #22543d;
+        }
+
+        .feedback.error {
+            background: linear-gradient(135deg, #fed7d7 0%, #fc8181 100%);
+            color: #742a2a;
+        }
+
+        .feedback.info {
+            background: linear-gradient(135deg, #bee3f8 0%, #90cdf4 100%);
+            color: #2c5282;
+        }
+
+        .countdown {
+            font-size: 5em;
+            color: #667eea;
+            font-weight: bold;
+            animation: countPulse 1s ease-in-out;
+        }
+
+        @keyframes countPulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.7; }
+        }
+
+        .game-over {
+            text-align: center;
+            padding: 40px;
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            border-radius: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .game-over.show {
+            display: block;
+            animation: slideDown 0.5s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .game-over h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+        }
+
+        .progress-info {
+            text-align: center;
+            margin: 15px 0;
+            font-size: 1.1em;
+            color: #666;
+        }
+
+        .category-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #000;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 1em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
+    <div class="container">
+        <h1>📝 So'z Xotirasi</h1>
+        <p class="subtitle">So'zlarni eslab qoling va takrorlang!</p>
 
-<div id="ui">
-    <div class="stat">KNOWLEDGE: <span id="score">0</span></div>
-    <div class="stat">MENTAL CLARITY <div id="core-health"><div id="health-fill"></div></div></div>
-</div>
+        <div class="game-mode">
+            <button class="mode-btn active" onclick="setGameMode('easy')">Oson (3-4 so'z)</button>
+            <button class="mode-btn" onclick="setGameMode('medium')">O'rta (5-6 so'z)</button>
+            <button class="mode-btn" onclick="setGameMode('hard')">Qiyin (7-10 so'z)</button>
+        </div>
 
-<div class="hint">SWIPE AWAY RED TOXIC THOUGHTS • ABSORB GREEN WISDOM</div>
-<canvas id="flowCanvas"></canvas>
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="level">1</div>
+                <div class="stat-label">Daraja</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="score">0</div>
+                <div class="stat-label">Ball</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="streak">0</div>
+                <div class="stat-label">Ketma-ketlik</div>
+            </div>
+        </div>
 
-<script>
-const canvas = document.getElementById('flowCanvas');
-const ctx = canvas.getContext('2d');
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+        <div id="gameArea">
+            <div class="game-instructions" id="instructions">
+                Boshlash uchun tugmani bosing
+            </div>
 
-let nodes = [], score = 0, integrity = 100, gameActive = true;
-const corePos = { x: canvas.width / 2, y: canvas.height / 2, r: 45 };
+            <div class="category-badge" id="category" style="display: none;"></div>
 
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            <div class="progress-info" id="progressInfo"></div>
 
-function playSound(freq, type, vol = 0.05) {
-    if (audioCtx.state === 'suspended') return;
-    const o = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    o.type = type; o.frequency.value = freq;
-    o.connect(g); g.connect(audioCtx.destination);
-    g.gain.setValueAtTime(vol, audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
-    o.start(); o.stop(audioCtx.currentTime + 0.2);
-}
+            <div class="words-display" id="wordsDisplay"></div>
 
-class Node {
-    constructor() {
-        this.reset();
-    }
-    reset() {
-        const side = Math.floor(Math.random() * 4);
-        if(side === 0) { this.x = Math.random()*canvas.width; this.y = -30; }
-        else if(side === 1) { this.x = canvas.width+30; this.y = Math.random()*canvas.height; }
-        else if(side === 2) { this.x = Math.random()*canvas.width; this.y = canvas.height+30; }
-        else { this.x = -30; this.y = Math.random()*canvas.height; }
+            <div class="input-area" id="inputArea">
+                <input type="text" 
+                       class="word-input" 
+                       id="wordInput" 
+                       placeholder="So'zni kiriting..."
+                       autocomplete="off">
+                <div class="word-list" id="wordList"></div>
+                <div class="controls">
+                    <button class="btn" onclick="submitWord()">Yuborish</button>
+                    <button class="btn btn-secondary" onclick="skipWord()">O'tkazib yuborish</button>
+                    <button class="btn btn-secondary" onclick="finishRecall()">Tugatish</button>
+                </div>
+            </div>
 
-        this.type = Math.random() > 0.7 ? 'bad' : (Math.random() > 0.3 ? 'good' : 'neutral');
-        this.s = 0.5 + Math.random() * 0.7; // Even slower for better focus
-        this.r = 12;
-        this.toRemove = false;
-    }
-    update() {
-        const angle = Math.atan2(corePos.y - this.y, corePos.x - this.x);
-        this.x += Math.cos(angle) * this.s;
-        this.y += Math.sin(angle) * this.s;
+            <div class="feedback" id="feedback"></div>
 
-        const dist = Math.sqrt((this.x - corePos.x)**2 + (this.y - corePos.y)**2);
-        if(dist < corePos.r) {
-            this.hitCore();
+            <div class="controls" id="startControls">
+                <button class="btn" onclick="startGame()">🎮 Boshlash</button>
+            </div>
+        </div>
+
+        <div class="game-over" id="gameOver">
+            <h2>🎯 Natijalar</h2>
+            <p style="font-size: 1.5em; margin: 20px 0; color: #666;">
+                Daraja: <strong id="finalLevel" style="color: #667eea;">1</strong>
+            </p>
+            <p style="font-size: 1.5em; margin: 20px 0; color: #666;">
+                Ball: <strong id="finalScore" style="color: #667eea;">0</strong>
+            </p>
+            <p style="font-size: 1.3em; margin: 20px 0; color: #666;">
+                Eng uzun ketma-ketlik: <strong id="maxStreak" style="color: #f5576c;">0</strong>
+            </p>
+            <button class="btn" onclick="resetGame()">Qayta O'ynash</button>
+        </div>
+    </div>
+
+    <script>
+        // Audio Context for sound effects
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let isMusicPlaying = false;
+
+        // Sound effects
+        function playWordSound() {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.type = 'sine';
+            oscillator.frequency.value = 600;
+            
+            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
         }
-    }
-    hitCore() {
-        if(this.type === 'good') {
-            score += 10;
-            playSound(600, 'sine');
-        } else if(this.type === 'bad') {
-            integrity -= 20;
-            playSound(150, 'square', 0.1);
-        } else {
-            score += 5;
-            playSound(400, 'sine');
+
+        function playCorrectSound() {
+            const notes = [523, 659, 784];
+            notes.forEach((freq, index) => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.type = 'triangle';
+                oscillator.frequency.value = freq;
+                
+                const startTime = audioContext.currentTime + (index * 0.08);
+                gainNode.gain.setValueAtTime(0.2, startTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.2);
+                
+                oscillator.start(startTime);
+                oscillator.stop(startTime + 0.2);
+            });
         }
-        this.toRemove = true;
-    }
-}
 
-function draw() {
-    if(!gameActive) return;
-
-    ctx.fillStyle = 'rgba(5, 5, 8, 0.4)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Core Drawing
-    ctx.strokeStyle = integrity > 30 ? '#fff' : '#e74c3c';
-    ctx.lineWidth = 3;
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = ctx.strokeStyle;
-    ctx.beginPath(); 
-    ctx.arc(corePos.x, corePos.y, corePos.r + Math.sin(Date.now()/300)*3, 0, Math.PI*2); 
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-
-    // Node processing
-    for (let i = nodes.length - 1; i >= 0; i--) {
-        let n = nodes[i];
-        n.update();
-        
-        ctx.fillStyle = n.type === 'good' ? '#2ecc71' : (n.type === 'bad' ? '#e74c3c' : '#f1c40f');
-        ctx.beginPath(); 
-        ctx.arc(n.x, n.y, n.r, 0, Math.PI*2); 
-        ctx.fill();
-
-        if (n.toRemove) {
-            nodes.splice(i, 1);
+        function playWrongSound() {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.value = 200;
+            
+            gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
         }
-    }
 
-    document.getElementById('score').innerText = score;
-    document.getElementById('health-fill').style.width = integrity + '%';
-    if(integrity <= 0) gameOver();
-
-    if(Math.random() < 0.015) nodes.push(new Node());
-
-    requestAnimationFrame(draw);
-}
-
-const handleInput = (e) => {
-    const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-    const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-    
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-
-    for (let i = nodes.length - 1; i >= 0; i--) {
-        let n = nodes[i];
-        const d = Math.sqrt((clientX - n.x)**2 + (clientY - n.y)**2);
-        
-        if(d < 50 && n.type === 'bad') {
-            nodes.splice(i, 1);
-            score += 5;
-            playSound(800, 'sine', 0.03);
-            break; 
+        function playLevelUpSound() {
+            const melody = [392, 494, 587, 698, 784];
+            melody.forEach((freq, index) => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.value = freq;
+                
+                const startTime = audioContext.currentTime + (index * 0.1);
+                gainNode.gain.setValueAtTime(0.2, startTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.25);
+                
+                oscillator.start(startTime);
+                oscillator.stop(startTime + 0.25);
+            });
         }
-    }
-};
 
-canvas.addEventListener('pointermove', handleInput);
-canvas.addEventListener('touchstart', handleInput);
+        let gameMode = 'easy';
+        let level = 1;
+        let score = 0;
+        let streak = 0;
+        let maxStreak = 0;
+        let currentWords = [];
+        let rememberedWords = [];
+        let currentCategory = '';
 
-function gameOver() {
-    gameActive = false;
-    alert("SYSTEM OVERLOAD!\nKnowledge Acquired: " + score + "\nMental Clarity: 0%");
-    location.reload();
-}
+        const wordCategories = {
+            easy: {
+                'Mevalar': ['olma', 'anor', 'uzum', 'behi'],
+                'Hayvonlar': ['mushuk', 'it', 'qush', 'baliq'],
+                'Ranglar': ['qizil', 'ko\'k', 'yashil', 'sariq'],
+                'Buyumlar': ['kitob', 'qalam', 'stol', 'stul']
+            },
+            medium: {
+                'Transport': ['mashina', 'velosiped', 'samolyot', 'poyezd', 'kema'],
+                'Kasb': ['o\'qituvchi', 'shifokor', 'muhandis', 'artist', 'oshpaz'],
+                'Sport': ['futbol', 'basketbol', 'suzish', 'yugurish', 'tennis', 'shaxmat'],
+                'Tabiat': ['daryo', 'tog\'', 'dengiz', 'quyosh', 'oy', 'yulduz']
+            },
+            hard: {
+                'Mamlakatlar': ['o\'zbekiston', 'qozog\'iston', 'turkiya', 'rossiya', 'italiya', 'yaponiya', 'germaniya', 'fransiya'],
+                'Shaharlar': ['toshkent', 'samarqand', 'buxoro', 'xiva', 'andijon', 'farg\'ona', 'namangan', 'qo\'qon'],
+                'Fan': ['matematika', 'fizika', 'kimyo', 'biologiya', 'astronomiya', 'geologiya', 'geografiya'],
+                'Kasblar': ['dasturchi', 'arxitektor', 'jurnalist', 'tadbirkor', 'direktor', 'menejer', 'loyihachi', 'tadqiqotchi']
+            }
+        };
 
-draw();
-</script>
+        function setGameMode(mode) {
+            gameMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function startGame() {
+            level = 1;
+            score = 0;
+            streak = 0;
+            maxStreak = 0;
+            
+            updateStats();
+            
+            document.getElementById('gameOver').classList.remove('show');
+            document.getElementById('startControls').style.display = 'none';
+            document.getElementById('feedback').classList.remove('show');
+            
+            nextLevel();
+        }
+
+        function nextLevel() {
+            // Select random category
+            const categories = wordCategories[gameMode];
+            const categoryNames = Object.keys(categories);
+            currentCategory = categoryNames[Math.floor(Math.random() * categoryNames.length)];
+            
+            // Get words and shuffle
+            let words = [...categories[currentCategory]];
+            words = words.sort(() => Math.random() - 0.5);
+            
+            // Determine number of words based on mode and level
+            let wordCount;
+            switch(gameMode) {
+                case 'easy':
+                    wordCount = Math.min(3 + Math.floor(level / 2), 5);
+                    break;
+                case 'medium':
+                    wordCount = Math.min(4 + Math.floor(level / 2), 7);
+                    break;
+                case 'hard':
+                    wordCount = Math.min(5 + level, 10);
+                    break;
+            }
+            
+            currentWords = words.slice(0, wordCount);
+            rememberedWords = [];
+            
+            document.getElementById('category').textContent = '📁 ' + currentCategory;
+            document.getElementById('category').style.display = 'block';
+            document.getElementById('instructions').textContent = `${currentWords.length} ta so'zni diqqat bilan eslang!`;
+            document.getElementById('inputArea').classList.remove('show');
+            document.getElementById('wordList').innerHTML = '';
+            
+            showWords();
+        }
+
+        function showWords() {
+            const display = document.getElementById('wordsDisplay');
+            display.innerHTML = '';
+            
+            let index = 0;
+            const interval = setInterval(() => {
+                if (index < currentWords.length) {
+                    display.innerHTML = `<div class="word-item">${currentWords[index]}</div>`;
+                    playWordSound();
+                    index++;
+                } else {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        display.innerHTML = '<div class="countdown">3</div>';
+                        setTimeout(() => {
+                            display.innerHTML = '<div class="countdown">2</div>';
+                            setTimeout(() => {
+                                display.innerHTML = '<div class="countdown">1</div>';
+                                setTimeout(() => {
+                                    startRecall();
+                                }, 1000);
+                            }, 1000);
+                        }, 1000);
+                    }, 500);
+                }
+            }, 2000);
+        }
+
+        function startRecall() {
+            document.getElementById('wordsDisplay').innerHTML = '<p style="color: #666; font-size: 1.2em;">Eslab qoling va yozing!</p>';
+            document.getElementById('instructions').textContent = 'So\'zlarni yozing (har qanday tartibda)';
+            document.getElementById('inputArea').classList.add('show');
+            document.getElementById('wordInput').focus();
+            document.getElementById('progressInfo').textContent = `0 / ${currentWords.length} so'z`;
+        }
+
+        function submitWord() {
+            const input = document.getElementById('wordInput');
+            const word = input.value.trim().toLowerCase();
+            
+            if (!word) return;
+            
+            if (rememberedWords.includes(word)) {
+                playWrongSound();
+                showFeedback('info', '⚠️ Bu so\'z allaqachon kiritilgan!');
+                input.value = '';
+                return;
+            }
+            
+            if (currentWords.includes(word)) {
+                playCorrectSound();
+                rememberedWords.push(word);
+                addWordChip(word, true);
+                streak++;
+                score += 10 + (streak * 2);
+                
+                showFeedback('success', '✓ To\'g\'ri!');
+                
+                if (rememberedWords.length === currentWords.length) {
+                    setTimeout(() => completeLevel(), 1000);
+                }
+            } else {
+                playWrongSound();
+                streak = 0;
+                showFeedback('error', '✗ Bu so\'z ro\'yxatda yo\'q!');
+            }
+            
+            input.value = '';
+            updateStats();
+            document.getElementById('progressInfo').textContent = `${rememberedWords.length} / ${currentWords.length} so'z`;
+        }
+
+        function skipWord() {
+            const input = document.getElementById('wordInput');
+            input.value = '';
+            streak = 0;
+            updateStats();
+        }
+
+        function finishRecall() {
+            if (rememberedWords.length === 0) {
+                showFeedback('error', 'Kamida bitta so\'z kiriting!');
+                return;
+            }
+            
+            completeLevel();
+        }
+
+        function completeLevel() {
+            const correctCount = rememberedWords.length;
+            const totalCount = currentWords.length;
+            const missedWords = currentWords.filter(w => !rememberedWords.includes(w));
+            
+            let feedbackText = '';
+            if (correctCount === totalCount) {
+                playLevelUpSound();
+                feedbackText = `🎉 Ajoyib! Barcha so'zlarni esladingiz!`;
+                level++;
+                score += 50;
+            } else {
+                feedbackText = `✅ ${correctCount} / ${totalCount} to'g'ri!`;
+                if (missedWords.length > 0) {
+                    feedbackText += `<br>Unutilgan: ${missedWords.join(', ')}`;
+                }
+                level++;
+            }
+            
+            if (streak > maxStreak) {
+                maxStreak = streak;
+            }
+            
+            showFeedback(correctCount === totalCount ? 'success' : 'info', feedbackText);
+            updateStats();
+            
+            document.getElementById('inputArea').classList.remove('show');
+            
+            setTimeout(() => {
+                if (level <= 10) {
+                    nextLevel();
+                } else {
+                    endGame();
+                }
+            }, 3000);
+        }
+
+        function addWordChip(word, isCorrect) {
+            const chip = document.createElement('div');
+            chip.className = 'word-chip';
+            chip.textContent = word;
+            if (isCorrect) {
+                chip.style.background = 'linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%)';
+            }
+            document.getElementById('wordList').appendChild(chip);
+        }
+
+        function showFeedback(type, message) {
+            const feedback = document.getElementById('feedback');
+            feedback.className = `feedback ${type} show`;
+            feedback.innerHTML = message;
+            
+            setTimeout(() => {
+                feedback.classList.remove('show');
+            }, 2000);
+        }
+
+        function updateStats() {
+            document.getElementById('level').textContent = level;
+            document.getElementById('score').textContent = score;
+            document.getElementById('streak').textContent = streak;
+        }
+
+        function endGame() {
+            document.getElementById('gameArea').style.display = 'none';
+            document.getElementById('gameOver').classList.add('show');
+            
+            document.getElementById('finalLevel').textContent = level - 1;
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('maxStreak').textContent = maxStreak;
+        }
+
+        function resetGame() {
+            document.getElementById('gameArea').style.display = 'block';
+            document.getElementById('gameOver').classList.remove('show');
+            document.getElementById('startControls').style.display = 'block';
+            document.getElementById('instructions').textContent = 'Boshlash uchun tugmani bosing';
+            document.getElementById('wordsDisplay').innerHTML = '';
+            document.getElementById('category').style.display = 'none';
+            document.getElementById('progressInfo').textContent = '';
+            document.getElementById('inputArea').classList.remove('show');
+        }
+
+        // Enter key support
+        document.getElementById('wordInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                submitWord();
+            }
+        });
+    </script>
 </body>
 </html>
