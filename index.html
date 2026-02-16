@@ -1,747 +1,283 @@
 <!DOCTYPE html>
-<html lang="uz">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📝 So'z Xotirasi O'yini</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .container {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            max-width: 700px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-
-        h1 {
-            text-align: center;
-            color: #667eea;
-            margin-bottom: 10px;
-            font-size: 2.5em;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 1.1em;
-        }
-
-        .stats {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            border-radius: 15px;
-        }
-
-        .stat {
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 2.5em;
-            font-weight: bold;
-            color: white;
-        }
-
-        .stat-label {
-            color: white;
-            font-size: 0.9em;
-            margin-top: 5px;
-            opacity: 0.9;
-        }
-
-        .game-mode {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-
-        .mode-btn {
-            background: white;
-            color: #667eea;
-            border: 2px solid #667eea;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            margin: 5px;
-            transition: all 0.3s;
-            font-weight: bold;
-        }
-
-        .mode-btn.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-color: #667eea;
-        }
-
-        .game-instructions {
-            text-align: center;
-            font-size: 1.3em;
-            color: #666;
-            margin: 25px 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-            border-radius: 15px;
-            font-weight: bold;
-            min-height: 70px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .words-display {
-            text-align: center;
-            min-height: 200px;
-            margin: 30px 0;
-            padding: 30px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            border-radius: 15px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .word-item {
-            font-size: 2.5em;
-            color: #667eea;
-            font-weight: bold;
-            margin: 10px 0;
-            opacity: 0;
-            animation: fadeInOut 2s ease-in-out;
-        }
-
-        @keyframes fadeInOut {
-            0% { opacity: 0; transform: scale(0.8); }
-            20% { opacity: 1; transform: scale(1.1); }
-            80% { opacity: 1; transform: scale(1); }
-            100% { opacity: 0; transform: scale(0.8); }
-        }
-
-        .input-area {
-            display: none;
-            margin: 30px 0;
-        }
-
-        .input-area.show {
-            display: block;
-        }
-
-        .word-input {
-            width: 100%;
-            padding: 20px;
-            font-size: 1.3em;
-            border: 3px solid #667eea;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            outline: none;
-            transition: all 0.3s;
-        }
-
-        .word-input:focus {
-            border-color: #764ba2;
-            box-shadow: 0 0 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .word-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin: 20px 0;
-            justify-content: center;
-        }
-
-        .word-chip {
-            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-            color: #333;
-            padding: 10px 20px;
-            border-radius: 25px;
-            font-weight: bold;
-            animation: popIn 0.3s ease;
-        }
-
-        @keyframes popIn {
-            0% { transform: scale(0); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-
-        .btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            border-radius: 10px;
-            font-size: 1.1em;
-            cursor: pointer;
-            transition: transform 0.2s;
-            margin: 10px 5px;
-            font-weight: bold;
-        }
-
-        .btn:hover {
-            transform: scale(1.05);
-        }
-
-        .btn:active {
-            transform: scale(0.95);
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .btn-secondary {
-            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-        }
-
-        .controls {
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        .feedback {
-            text-align: center;
-            font-size: 1.4em;
-            padding: 20px;
-            border-radius: 15px;
-            margin: 20px 0;
-            font-weight: bold;
-            display: none;
-        }
-
-        .feedback.show {
-            display: block;
-            animation: slideIn 0.3s ease;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .feedback.success {
-            background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
-            color: #22543d;
-        }
-
-        .feedback.error {
-            background: linear-gradient(135deg, #fed7d7 0%, #fc8181 100%);
-            color: #742a2a;
-        }
-
-        .feedback.info {
-            background: linear-gradient(135deg, #bee3f8 0%, #90cdf4 100%);
-            color: #2c5282;
-        }
-
-        .countdown {
-            font-size: 5em;
-            color: #667eea;
-            font-weight: bold;
-            animation: countPulse 1s ease-in-out;
-        }
-
-        @keyframes countPulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.3); opacity: 0.7; }
-        }
-
-        .game-over {
-            text-align: center;
-            padding: 40px;
-            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
-            border-radius: 20px;
-            margin-top: 20px;
-            display: none;
-        }
-
-        .game-over.show {
-            display: block;
-            animation: slideDown 0.5s ease-out;
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .game-over h2 {
-            color: #667eea;
-            margin-bottom: 20px;
-            font-size: 2.5em;
-        }
-
-        .progress-info {
-            text-align: center;
-            margin: 15px 0;
-            font-size: 1.1em;
-            color: #666;
-        }
-
-        .category-badge {
-            display: inline-block;
-            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-            color: #000;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-size: 1em;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>NEON FLIP</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;600;700&family=Share+Tech+Mono&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--bg:#080010;--c1:#ff00aa;--c2:#00ffcc;--card:#110025;}
+body{min-height:100vh;height:100dvh;background:var(--bg);color:#fff;font-family:'Chakra Petch',sans-serif;
+  overflow:hidden;display:flex;flex-direction:column;touch-action:manipulation;}
+body::before{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(255,0,170,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,0,170,.04) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;z-index:0;}
+#langScr{position:fixed;inset:0;background:rgba(8,0,16,.97);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:28px;z-index:300;}
+#langScr.hidden{display:none;}
+.lt{font-size:.8rem;color:rgba(255,0,170,.6);letter-spacing:5px;}
+.lf{display:flex;gap:14px;}
+.lf-btn{width:76px;height:76px;border-radius:12px;border:1.5px solid rgba(255,0,170,.3);
+  background:rgba(255,0,170,.05);display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:5px;cursor:pointer;transition:all .2s;}
+.lf-btn:active{transform:scale(.9);}
+.lf-btn.sel{border-color:var(--c1);background:rgba(255,0,170,.15);box-shadow:0 0 20px rgba(255,0,170,.3);}
+.lf-fc{font-size:.55rem;color:rgba(255,255,255,.6);letter-spacing:1px;}
+#header{position:relative;z-index:10;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;}
+.h-box{background:rgba(255,0,170,.06);border:1px solid rgba(255,0,170,.2);border-radius:8px;padding:5px 12px;}
+.h-lbl{font-size:.55rem;color:rgba(255,0,170,.5);letter-spacing:3px;}
+.h-val{font-family:'Share Tech Mono',monospace;font-size:1.1rem;color:var(--c1);}
+#globeBtn{width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,0,170,.3);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+#gameArea{flex:1;display:flex;align-items:center;justify-content:center;padding:6px;position:relative;z-index:5;}
+#grid{display:grid;gap:10px;}
+.card{aspect-ratio:1;border-radius:10px;cursor:pointer;position:relative;transform-style:preserve-3d;transition:transform .4s cubic-bezier(.4,0,.2,1);}
+.card.flipped,.card.matched{transform:rotateY(180deg);}
+.card-back,.card-front{position:absolute;inset:0;border-radius:10px;backface-visibility:hidden;display:flex;align-items:center;justify-content:center;}
+.card-back{background:var(--card);border:1.5px solid rgba(255,0,170,.2);}
+.card-front{background:var(--card);border:1.5px solid var(--c1);transform:rotateY(180deg);}
+.card.matched .card-front{border-color:var(--c2);box-shadow:0 0 18px rgba(0,255,204,.4);background:rgba(0,255,204,.04);}
+#msg{position:relative;z-index:10;text-align:center;padding:5px;font-size:.8rem;letter-spacing:3px;color:rgba(255,255,255,.4);min-height:26px;}
+.ov{position:fixed;inset:0;background:rgba(8,0,16,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;z-index:200;}
+.ov.hidden{display:none;}
+.ov-logo{font-size:clamp(2.5rem,10vw,5rem);font-weight:700;letter-spacing:.08em;
+  background:linear-gradient(135deg,var(--c1),#aa00ff,var(--c2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 20px var(--c1));}
+.ov-sub{font-size:.75rem;color:rgba(255,255,255,.4);letter-spacing:4px;}
+.ov-btn{font-family:'Chakra Petch',sans-serif;font-weight:700;letter-spacing:.12em;padding:13px 38px;
+  background:transparent;border:2px solid var(--c1);color:var(--c1);border-radius:4px;cursor:pointer;font-size:.95rem;
+  box-shadow:0 0 20px rgba(255,0,170,.3),inset 0 0 20px rgba(255,0,170,.05);transition:all .2s;}
+.ov-btn:active{transform:scale(.95);}
+.stats{display:flex;gap:32px;}
+.st{text-align:center;}
+.st-n{font-family:'Share Tech Mono',monospace;font-size:2rem;color:var(--c2);}
+.st-l{font-size:.6rem;color:rgba(255,255,255,.35);letter-spacing:2px;}
+.diff-row{display:flex;gap:10px;}
+.diff-btn{padding:9px 18px;border:1.5px solid rgba(255,0,170,.25);background:rgba(255,0,170,.05);
+  border-radius:6px;color:rgba(255,255,255,.6);font-family:'Chakra Petch',sans-serif;
+  font-size:.75rem;letter-spacing:2px;cursor:pointer;transition:all .2s;}
+.diff-btn.sel{border-color:var(--c1);color:var(--c1);background:rgba(255,0,170,.12);}
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>📝 So'z Xotirasi</h1>
-        <p class="subtitle">So'zlarni eslab qoling va takrorlang!</p>
+<div id="langScr" class="hidden">
+  <div class="lt" id="chooseLangTxt">CHOOSE LANGUAGE</div>
+  <div class="lf" id="langFlags"></div>
+</div>
+<div id="header">
+  <div class="h-box"><div class="h-lbl" id="lbMoves">MOVES</div><div class="h-val" id="movesVal">0</div></div>
+  <div class="h-box"><div class="h-lbl" id="lbPairs">PAIRS</div><div class="h-val" id="pairsVal">0/0</div></div>
+  <div class="h-box"><div class="h-lbl" id="lbTime">TIME</div><div class="h-val" id="timeVal">00:00</div></div>
+  <canvas id="globeBtn" width="34" height="34" onclick="openLang()"></canvas>
+</div>
+<div id="gameArea"><div id="grid"></div></div>
+<div id="msg"></div>
+<div class="ov" id="startOv">
+  <div class="ov-logo">NEON<br>FLIP</div>
+  <div class="ov-sub" id="subTxt">MATCH THE PAIRS</div>
+  <div class="diff-row">
+    <div class="diff-btn sel" id="d4" onclick="setDiff(4)">4x4</div>
+    <div class="diff-btn" id="d5" onclick="setDiff(5)">5x4</div>
+    <div class="diff-btn" id="d6" onclick="setDiff(6)">6x5</div>
+  </div>
+  <div class="ov-btn" onclick="startGame()" id="startBtn">PLAY</div>
+</div>
+<div class="ov hidden" id="winOv">
+  <div class="ov-logo" style="font-size:clamp(1.5rem,7vw,3.5rem)" id="winTitle">YOU WIN!</div>
+  <div class="stats">
+    <div class="st"><div class="st-n" id="wMoves">0</div><div class="st-l" id="wMovesLbl">MOVES</div></div>
+    <div class="st"><div class="st-n" id="wTime">0:00</div><div class="st-l" id="wTimeLbl">TIME</div></div>
+    <div class="st"><div class="st-n" id="wBest">--</div><div class="st-l" id="wBestLbl">BEST</div></div>
+  </div>
+  <div class="ov-btn" onclick="startGame()" id="retryBtn">PLAY AGAIN</div>
+</div>
+<script>
+// CARD SYMBOLS - drawn on canvas (geometric shapes, no emoji)
+var SYMBOLS=[
+  function(cx,s){// Star
+    cx.fillStyle='#ff44aa';cx.beginPath();
+    for(var i=0;i<5;i++){var a=i*Math.PI*.4-Math.PI*.5,a2=a+Math.PI*.2;
+      var x1=s*.42*Math.cos(a),y1=s*.42*Math.sin(a),x2=s*.18*Math.cos(a2),y2=s*.18*Math.sin(a2);
+      i===0?cx.moveTo(x1,y1):cx.lineTo(x1,y1);cx.lineTo(x2,y2);}cx.closePath();cx.fill();},
+  function(cx,s){// Diamond
+    cx.fillStyle='#00ffcc';cx.beginPath();cx.moveTo(0,-s*.4);cx.lineTo(s*.32,0);cx.lineTo(0,s*.4);cx.lineTo(-s*.32,0);cx.closePath();cx.fill();},
+  function(cx,s){// Circle ring
+    cx.strokeStyle='#aa44ff';cx.lineWidth=s*.08;cx.beginPath();cx.arc(0,0,s*.36,0,Math.PI*2);cx.stroke();
+    cx.fillStyle='#aa44ff';cx.beginPath();cx.arc(0,0,s*.12,0,Math.PI*2);cx.fill();},
+  function(cx,s){// Triangle
+    cx.fillStyle='#ffcc00';cx.beginPath();cx.moveTo(0,-s*.38);cx.lineTo(s*.38,s*.32);cx.lineTo(-s*.38,s*.32);cx.closePath();cx.fill();},
+  function(cx,s){// Cross
+    cx.fillStyle='#ff6644';cx.fillRect(-s*.3,-s*.1,s*.6,s*.2);cx.fillRect(-s*.1,-s*.3,s*.2,s*.6);},
+  function(cx,s){// Hexagon
+    cx.fillStyle='#44ccff';cx.beginPath();
+    for(var i=0;i<6;i++){var a=i*Math.PI/3-Math.PI/6;i===0?cx.moveTo(s*.38*Math.cos(a),s*.38*Math.sin(a)):cx.lineTo(s*.38*Math.cos(a),s*.38*Math.sin(a));}cx.closePath();cx.fill();},
+  function(cx,s){// Square rotated
+    cx.fillStyle='#ff4466';cx.save();cx.rotate(Math.PI/4);cx.fillRect(-s*.28,-s*.28,s*.56,s*.56);cx.restore();},
+  function(cx,s){// Moon crescent
+    cx.fillStyle='#ffee44';cx.beginPath();cx.arc(0,0,s*.38,0,Math.PI*2);cx.fill();
+    cx.fillStyle='#110025';cx.beginPath();cx.arc(s*.14,0,s*.3,0,Math.PI*2);cx.fill();},
+  function(cx,s){// Lightning bolt
+    cx.fillStyle='#ffaa00';cx.beginPath();cx.moveTo(s*.1,-s*.38);cx.lineTo(-s*.1,-s*.02);cx.lineTo(s*.06,-s*.02);cx.lineTo(-s*.1,s*.38);cx.lineTo(s*.14,s*.02);cx.lineTo(-s*.06,s*.02);cx.closePath();cx.fill();},
+  function(cx,s){// Heart
+    cx.fillStyle='#ff44aa';cx.beginPath();cx.arc(-s*.14,-s*.1,s*.22,Math.PI,0);cx.arc(s*.14,-s*.1,s*.22,Math.PI,0);cx.lineTo(0,s*.38);cx.closePath();cx.fill();},
+  function(cx,s){// Arrow
+    cx.fillStyle='#44ff88';cx.beginPath();cx.moveTo(s*.38,0);cx.lineTo(s*.02,-s*.35);cx.lineTo(s*.02,-s*.1);cx.lineTo(-s*.38,-s*.1);cx.lineTo(-s*.38,s*.1);cx.lineTo(s*.02,s*.1);cx.lineTo(s*.02,s*.35);cx.closePath();cx.fill();},
+  function(cx,s){// Spiral/ring
+    cx.strokeStyle='#dd44ff';cx.lineWidth=s*.06;
+    for(var i=0;i<12;i++){var a1=i/12*Math.PI*4,a2=(i+1)/12*Math.PI*4,r1=s*.12+i*.022,r2=s*.12+(i+1)*.022;
+      cx.beginPath();cx.moveTo(r1*Math.cos(a1),r1*Math.sin(a1));cx.lineTo(r2*Math.cos(a2),r2*Math.sin(a2));cx.stroke();}},
+  function(cx,s){// Octagon
+    cx.fillStyle='#ff8844';cx.beginPath();
+    for(var i=0;i<8;i++){var a=i*Math.PI/4;i===0?cx.moveTo(s*.38*Math.cos(a),s*.38*Math.sin(a)):cx.lineTo(s*.38*Math.cos(a),s*.38*Math.sin(a));}cx.closePath();cx.fill();},
+  function(cx,s){// Wave
+    cx.strokeStyle='#44eeff';cx.lineWidth=s*.07;cx.beginPath();
+    for(var x=-s*.4;x<=s*.4;x+=2){var y=s*.2*Math.sin((x/s*.4)*Math.PI*2);
+      x===-s*.4?cx.moveTo(x,y):cx.lineTo(x,y);}cx.stroke();
+    cx.beginPath();for(var x=-s*.4;x<=s*.4;x+=2){var y=s*.2*Math.sin((x/s*.4)*Math.PI*2+Math.PI);
+      x===-s*.4?cx.moveTo(x,y):cx.lineTo(x,y);}cx.stroke();},
+  function(cx,s){// Plus thick
+    cx.fillStyle='#aa66ff';var t=s*.12;
+    cx.beginPath();cx.roundRect(-t,-s*.38,t*2,s*.76,t*.5);cx.fill();
+    cx.beginPath();cx.roundRect(-s*.38,-t,s*.76,t*2,t*.5);cx.fill();}
+];
 
-        <div class="game-mode">
-            <button class="mode-btn active" onclick="setGameMode('easy')">Oson (3-4 so'z)</button>
-            <button class="mode-btn" onclick="setGameMode('medium')">O'rta (5-6 so'z)</button>
-            <button class="mode-btn" onclick="setGameMode('hard')">Qiyin (7-10 so'z)</button>
-        </div>
+function drawFlag(canvas,country){
+  var cx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;
+  cx.clearRect(0,0,w,h);
+  if(country==='uz'){cx.fillStyle='#1eb53a';cx.fillRect(0,0,w,h/3);cx.fillStyle='#fff';cx.fillRect(0,h/3,w,h/3);cx.fillStyle='#1ba3e3';cx.fillRect(0,h*2/3,w,h/3);cx.fillStyle='rgba(255,255,255,.9)';cx.beginPath();cx.arc(w*.25,h*.2,h*.12,0,Math.PI*2);cx.fill();}
+  else if(country==='ru'){cx.fillStyle='#fff';cx.fillRect(0,0,w,h/3);cx.fillStyle='#0039a6';cx.fillRect(0,h/3,w,h/3);cx.fillStyle='#d52b1e';cx.fillRect(0,h*2/3,w,h/3);}
+  else{cx.fillStyle='#012169';cx.fillRect(0,0,w,h);cx.strokeStyle='#fff';cx.lineWidth=h*.22;cx.beginPath();cx.moveTo(0,0);cx.lineTo(w,h);cx.stroke();cx.beginPath();cx.moveTo(w,0);cx.lineTo(0,h);cx.stroke();cx.strokeStyle='#c8102e';cx.lineWidth=h*.13;cx.beginPath();cx.moveTo(0,0);cx.lineTo(w,h);cx.stroke();cx.beginPath();cx.moveTo(w,0);cx.lineTo(0,h);cx.stroke();cx.fillStyle='#fff';cx.fillRect(w*.4,0,w*.2,h);cx.fillRect(0,h*.4,w,h*.2);cx.fillStyle='#c8102e';cx.fillRect(w*.44,0,w*.12,h);cx.fillRect(0,h*.44,w,h*.12);}
+}
+function drawGlobeBtn(){
+  var c=document.getElementById('globeBtn'),cx=c.getContext('2d');
+  cx.clearRect(0,0,34,34);cx.strokeStyle='rgba(255,0,170,.6)';cx.lineWidth=1.5;
+  cx.beginPath();cx.arc(17,17,13,0,Math.PI*2);cx.stroke();
+  cx.beginPath();cx.ellipse(17,17,6,13,0,0,Math.PI*2);cx.stroke();
+  cx.beginPath();cx.moveTo(4,17);cx.lineTo(30,17);cx.stroke();
+  cx.beginPath();cx.moveTo(17,4);cx.lineTo(17,30);cx.stroke();
+}
+function buildLangBtns(){
+  var lf=document.getElementById('langFlags');lf.innerHTML='';
+  [['uz','UZ'],['ru','RU'],['en','EN']].forEach(function(p){
+    var d=document.createElement('div');d.className='lf-btn'+(lang===p[0]?' sel':'');
+    d.onclick=function(){setLang(p[0]);};
+    var fc=document.createElement('canvas');fc.width=38;fc.height=26;fc.style.borderRadius='3px';
+    drawFlag(fc,p[0]);
+    var lb=document.createElement('div');lb.className='lf-fc';lb.textContent=p[1];
+    d.appendChild(fc);d.appendChild(lb);lf.appendChild(d);
+  });
+}
 
-        <div class="stats">
-            <div class="stat">
-                <div class="stat-value" id="level">1</div>
-                <div class="stat-label">Daraja</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value" id="score">0</div>
-                <div class="stat-label">Ball</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value" id="streak">0</div>
-                <div class="stat-label">Ketma-ketlik</div>
-            </div>
-        </div>
+var T={
+  uz:{moves:'HARAKAT',pairs:'JUF',time:'VAQT',match:'MOS KELDI!',noMatch:'MOS EMAS',win:'YUTDINGIZ!',play:'BOSHLASH',again:'QAYTA',best:'REKORD',sub:'JUFTLARNI TOP',choose:'TIL TANLASH'},
+  ru:{moves:'KHODY',pairs:'PARY',time:'VREMYA',match:'SOVPALO!',noMatch:'NE SOVPALO',win:'POBEDA!',play:'IGRAT',again:'ESHCHE RAZ',best:'REKORD',sub:'NAIDI PARY',choose:'VYBOR YAZYKA'},
+  en:{moves:'MOVES',pairs:'PAIRS',time:'TIME',match:'MATCH!',noMatch:'NO MATCH',win:'YOU WIN!',play:'PLAY',again:'PLAY AGAIN',best:'BEST',sub:'MATCH THE PAIRS',choose:'CHOOSE LANGUAGE'}
+};
+var lang='en';
+function setLang(l){lang=l;buildLangBtns();applyLang();closeLang();}
+function applyLang(){
+  var t=T[lang];
+  document.getElementById('lbMoves').textContent=t.moves;
+  document.getElementById('lbPairs').textContent=t.pairs;
+  document.getElementById('lbTime').textContent=t.time;
+  document.getElementById('subTxt').textContent=t.sub;
+  document.getElementById('startBtn').textContent=t.play;
+  document.getElementById('retryBtn').textContent=t.again;
+  document.getElementById('winTitle').textContent=t.win;
+  document.getElementById('wMovesLbl').textContent=t.moves;
+  document.getElementById('wTimeLbl').textContent=t.time;
+  document.getElementById('wBestLbl').textContent=t.best;
+  document.getElementById('chooseLangTxt').textContent=t.choose;
+}
+function openLang(){buildLangBtns();document.getElementById('langScr').classList.remove('hidden');}
+function closeLang(){document.getElementById('langScr').classList.add('hidden');}
 
-        <div id="gameArea">
-            <div class="game-instructions" id="instructions">
-                Boshlash uchun tugmani bosing
-            </div>
+var actx=null;
+function initAudio(){if(!actx)actx=new(window.AudioContext||window.webkitAudioContext)();}
+function nt(f,type,t,d,v){
+  var o=actx.createOscillator(),g=actx.createGain();
+  o.type=type;o.frequency.setValueAtTime(f,t);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.02);g.gain.linearRampToValueAtTime(0,t+d);
+  o.connect(g);g.connect(actx.destination);o.start(t);o.stop(t+d+.03);
+}
+function sfxFlip(){var t=actx.currentTime;nt(600,'sine',t,.06,.05);nt(800,'sine',t+.03,.04,.03);}
+function sfxMatch(){var t=actx.currentTime;[523,659,784,1047].forEach(function(f,i){nt(f,'triangle',t+i*.07,.12,.07);});}
+function sfxNoMatch(){var t=actx.currentTime;nt(200,'sawtooth',t,.18,.07);}
+function sfxWin(){var t=actx.currentTime;[523,587,659,698,784,880,988,1047,1318].forEach(function(f,i){nt(f,'triangle',t+i*.06,.15,.06);});}
 
-            <div class="category-badge" id="category" style="display: none;"></div>
+var diff=4,gridCols,gridRows,totalPairs;
+var cards=[],flipped=[],matched=0,moves=0,lock=false,timer=null,seconds=0,bestTime=null,gameStarted=false;
 
-            <div class="progress-info" id="progressInfo"></div>
+function setDiff(d){diff=d;document.querySelectorAll('.diff-btn').forEach(function(el){el.classList.remove('sel');});document.getElementById('d'+d).classList.add('sel');}
+function startGame(){
+  initAudio();if(actx.state==='suspended')actx.resume();
+  document.getElementById('startOv').classList.add('hidden');document.getElementById('winOv').classList.add('hidden');
+  if(diff===4){gridCols=4;gridRows=4;totalPairs=8;}else if(diff===5){gridCols=5;gridRows=4;totalPairs=10;}else{gridCols=6;gridRows=5;totalPairs=15;}
+  var pool=[...Array(15).keys()].sort(function(){return Math.random()-.5;}).slice(0,totalPairs);
+  var deck=[...pool,...pool].sort(function(){return Math.random()-.5;});
+  cards=deck.map(function(sym,i){return{id:i,sym:sym,flipped:false,matched:false};});
+  flipped=[];matched=0;moves=0;lock=false;gameStarted=false;seconds=0;clearInterval(timer);
+  updateHUD();buildGrid();document.getElementById('msg').textContent='';
+}
 
-            <div class="words-display" id="wordsDisplay"></div>
+function buildGrid(){
+  var g=document.getElementById('grid');g.innerHTML='';
+  var vw=window.innerWidth,vh=window.innerHeight-110;
+  var sz=Math.min(Math.floor((vw-20)/gridCols)-10,Math.floor((vh-20)/gridRows)-10,90);
+  g.style.gridTemplateColumns='repeat('+gridCols+','+(sz)+'px)';
+  g.style.gridTemplateRows='repeat('+gridRows+','+(sz)+'px)';
+  cards.forEach(function(card,i){
+    var el=document.createElement('div');el.className='card';
+    // Back face
+    var back=document.createElement('div');back.className='card-back';
+    var bCanvas=document.createElement('canvas');bCanvas.width=sz*.7;bCanvas.height=sz*.7;
+    var bcx=bCanvas.getContext('2d');bcx.strokeStyle='rgba(255,0,170,.2)';bcx.lineWidth=1.5;
+    bcx.beginPath();bcx.moveTo(sz*.35,0);bcx.lineTo(0,sz*.35);bcx.lineTo(sz*.35,sz*.7);bcx.lineTo(sz*.7,sz*.35);bcx.closePath();bcx.stroke();
+    back.appendChild(bCanvas);
+    // Front face
+    var front=document.createElement('div');front.className='card-front';
+    var fCanvas=document.createElement('canvas');fCanvas.width=sz*.7;fCanvas.height=sz*.7;
+    var fcx=fCanvas.getContext('2d');fcx.save();fcx.translate(sz*.35,sz*.35);
+    SYMBOLS[card.sym%SYMBOLS.length](fcx,sz);fcx.restore();
+    front.appendChild(fCanvas);
+    el.appendChild(back);el.appendChild(front);
+    el.addEventListener('click',function(){flipCard(i,el);});
+    g.appendChild(el);card.el=el;
+  });
+}
 
-            <div class="input-area" id="inputArea">
-                <input type="text" 
-                       class="word-input" 
-                       id="wordInput" 
-                       placeholder="So'zni kiriting..."
-                       autocomplete="off">
-                <div class="word-list" id="wordList"></div>
-                <div class="controls">
-                    <button class="btn" onclick="submitWord()">Yuborish</button>
-                    <button class="btn btn-secondary" onclick="skipWord()">O'tkazib yuborish</button>
-                    <button class="btn btn-secondary" onclick="finishRecall()">Tugatish</button>
-                </div>
-            </div>
-
-            <div class="feedback" id="feedback"></div>
-
-            <div class="controls" id="startControls">
-                <button class="btn" onclick="startGame()">🎮 Boshlash</button>
-            </div>
-        </div>
-
-        <div class="game-over" id="gameOver">
-            <h2>🎯 Natijalar</h2>
-            <p style="font-size: 1.5em; margin: 20px 0; color: #666;">
-                Daraja: <strong id="finalLevel" style="color: #667eea;">1</strong>
-            </p>
-            <p style="font-size: 1.5em; margin: 20px 0; color: #666;">
-                Ball: <strong id="finalScore" style="color: #667eea;">0</strong>
-            </p>
-            <p style="font-size: 1.3em; margin: 20px 0; color: #666;">
-                Eng uzun ketma-ketlik: <strong id="maxStreak" style="color: #f5576c;">0</strong>
-            </p>
-            <button class="btn" onclick="resetGame()">Qayta O'ynash</button>
-        </div>
-    </div>
-
-    <script>
-        // Audio Context for sound effects
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        let isMusicPlaying = false;
-
-        // Sound effects
-        function playWordSound() {
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.type = 'sine';
-            oscillator.frequency.value = 600;
-            
-            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-            
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.5);
-        }
-
-        function playCorrectSound() {
-            const notes = [523, 659, 784];
-            notes.forEach((freq, index) => {
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator.type = 'triangle';
-                oscillator.frequency.value = freq;
-                
-                const startTime = audioContext.currentTime + (index * 0.08);
-                gainNode.gain.setValueAtTime(0.2, startTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.2);
-                
-                oscillator.start(startTime);
-                oscillator.stop(startTime + 0.2);
-            });
-        }
-
-        function playWrongSound() {
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.type = 'sawtooth';
-            oscillator.frequency.value = 200;
-            
-            gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-            
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.3);
-        }
-
-        function playLevelUpSound() {
-            const melody = [392, 494, 587, 698, 784];
-            melody.forEach((freq, index) => {
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator.type = 'sine';
-                oscillator.frequency.value = freq;
-                
-                const startTime = audioContext.currentTime + (index * 0.1);
-                gainNode.gain.setValueAtTime(0.2, startTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.25);
-                
-                oscillator.start(startTime);
-                oscillator.stop(startTime + 0.25);
-            });
-        }
-
-        let gameMode = 'easy';
-        let level = 1;
-        let score = 0;
-        let streak = 0;
-        let maxStreak = 0;
-        let currentWords = [];
-        let rememberedWords = [];
-        let currentCategory = '';
-
-        const wordCategories = {
-            easy: {
-                'Mevalar': ['olma', 'anor', 'uzum', 'behi'],
-                'Hayvonlar': ['mushuk', 'it', 'qush', 'baliq'],
-                'Ranglar': ['qizil', 'ko\'k', 'yashil', 'sariq'],
-                'Buyumlar': ['kitob', 'qalam', 'stol', 'stul']
-            },
-            medium: {
-                'Transport': ['mashina', 'velosiped', 'samolyot', 'poyezd', 'kema'],
-                'Kasb': ['o\'qituvchi', 'shifokor', 'muhandis', 'artist', 'oshpaz'],
-                'Sport': ['futbol', 'basketbol', 'suzish', 'yugurish', 'tennis', 'shaxmat'],
-                'Tabiat': ['daryo', 'tog\'', 'dengiz', 'quyosh', 'oy', 'yulduz']
-            },
-            hard: {
-                'Mamlakatlar': ['o\'zbekiston', 'qozog\'iston', 'turkiya', 'rossiya', 'italiya', 'yaponiya', 'germaniya', 'fransiya'],
-                'Shaharlar': ['toshkent', 'samarqand', 'buxoro', 'xiva', 'andijon', 'farg\'ona', 'namangan', 'qo\'qon'],
-                'Fan': ['matematika', 'fizika', 'kimyo', 'biologiya', 'astronomiya', 'geologiya', 'geografiya'],
-                'Kasblar': ['dasturchi', 'arxitektor', 'jurnalist', 'tadbirkor', 'direktor', 'menejer', 'loyihachi', 'tadqiqotchi']
-            }
-        };
-
-        function setGameMode(mode) {
-            gameMode = mode;
-            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-        }
-
-        function startGame() {
-            level = 1;
-            score = 0;
-            streak = 0;
-            maxStreak = 0;
-            
-            updateStats();
-            
-            document.getElementById('gameOver').classList.remove('show');
-            document.getElementById('startControls').style.display = 'none';
-            document.getElementById('feedback').classList.remove('show');
-            
-            nextLevel();
-        }
-
-        function nextLevel() {
-            // Select random category
-            const categories = wordCategories[gameMode];
-            const categoryNames = Object.keys(categories);
-            currentCategory = categoryNames[Math.floor(Math.random() * categoryNames.length)];
-            
-            // Get words and shuffle
-            let words = [...categories[currentCategory]];
-            words = words.sort(() => Math.random() - 0.5);
-            
-            // Determine number of words based on mode and level
-            let wordCount;
-            switch(gameMode) {
-                case 'easy':
-                    wordCount = Math.min(3 + Math.floor(level / 2), 5);
-                    break;
-                case 'medium':
-                    wordCount = Math.min(4 + Math.floor(level / 2), 7);
-                    break;
-                case 'hard':
-                    wordCount = Math.min(5 + level, 10);
-                    break;
-            }
-            
-            currentWords = words.slice(0, wordCount);
-            rememberedWords = [];
-            
-            document.getElementById('category').textContent = '📁 ' + currentCategory;
-            document.getElementById('category').style.display = 'block';
-            document.getElementById('instructions').textContent = `${currentWords.length} ta so'zni diqqat bilan eslang!`;
-            document.getElementById('inputArea').classList.remove('show');
-            document.getElementById('wordList').innerHTML = '';
-            
-            showWords();
-        }
-
-        function showWords() {
-            const display = document.getElementById('wordsDisplay');
-            display.innerHTML = '';
-            
-            let index = 0;
-            const interval = setInterval(() => {
-                if (index < currentWords.length) {
-                    display.innerHTML = `<div class="word-item">${currentWords[index]}</div>`;
-                    playWordSound();
-                    index++;
-                } else {
-                    clearInterval(interval);
-                    setTimeout(() => {
-                        display.innerHTML = '<div class="countdown">3</div>';
-                        setTimeout(() => {
-                            display.innerHTML = '<div class="countdown">2</div>';
-                            setTimeout(() => {
-                                display.innerHTML = '<div class="countdown">1</div>';
-                                setTimeout(() => {
-                                    startRecall();
-                                }, 1000);
-                            }, 1000);
-                        }, 1000);
-                    }, 500);
-                }
-            }, 2000);
-        }
-
-        function startRecall() {
-            document.getElementById('wordsDisplay').innerHTML = '<p style="color: #666; font-size: 1.2em;">Eslab qoling va yozing!</p>';
-            document.getElementById('instructions').textContent = 'So\'zlarni yozing (har qanday tartibda)';
-            document.getElementById('inputArea').classList.add('show');
-            document.getElementById('wordInput').focus();
-            document.getElementById('progressInfo').textContent = `0 / ${currentWords.length} so'z`;
-        }
-
-        function submitWord() {
-            const input = document.getElementById('wordInput');
-            const word = input.value.trim().toLowerCase();
-            
-            if (!word) return;
-            
-            if (rememberedWords.includes(word)) {
-                playWrongSound();
-                showFeedback('info', '⚠️ Bu so\'z allaqachon kiritilgan!');
-                input.value = '';
-                return;
-            }
-            
-            if (currentWords.includes(word)) {
-                playCorrectSound();
-                rememberedWords.push(word);
-                addWordChip(word, true);
-                streak++;
-                score += 10 + (streak * 2);
-                
-                showFeedback('success', '✓ To\'g\'ri!');
-                
-                if (rememberedWords.length === currentWords.length) {
-                    setTimeout(() => completeLevel(), 1000);
-                }
-            } else {
-                playWrongSound();
-                streak = 0;
-                showFeedback('error', '✗ Bu so\'z ro\'yxatda yo\'q!');
-            }
-            
-            input.value = '';
-            updateStats();
-            document.getElementById('progressInfo').textContent = `${rememberedWords.length} / ${currentWords.length} so'z`;
-        }
-
-        function skipWord() {
-            const input = document.getElementById('wordInput');
-            input.value = '';
-            streak = 0;
-            updateStats();
-        }
-
-        function finishRecall() {
-            if (rememberedWords.length === 0) {
-                showFeedback('error', 'Kamida bitta so\'z kiriting!');
-                return;
-            }
-            
-            completeLevel();
-        }
-
-        function completeLevel() {
-            const correctCount = rememberedWords.length;
-            const totalCount = currentWords.length;
-            const missedWords = currentWords.filter(w => !rememberedWords.includes(w));
-            
-            let feedbackText = '';
-            if (correctCount === totalCount) {
-                playLevelUpSound();
-                feedbackText = `🎉 Ajoyib! Barcha so'zlarni esladingiz!`;
-                level++;
-                score += 50;
-            } else {
-                feedbackText = `✅ ${correctCount} / ${totalCount} to'g'ri!`;
-                if (missedWords.length > 0) {
-                    feedbackText += `<br>Unutilgan: ${missedWords.join(', ')}`;
-                }
-                level++;
-            }
-            
-            if (streak > maxStreak) {
-                maxStreak = streak;
-            }
-            
-            showFeedback(correctCount === totalCount ? 'success' : 'info', feedbackText);
-            updateStats();
-            
-            document.getElementById('inputArea').classList.remove('show');
-            
-            setTimeout(() => {
-                if (level <= 10) {
-                    nextLevel();
-                } else {
-                    endGame();
-                }
-            }, 3000);
-        }
-
-        function addWordChip(word, isCorrect) {
-            const chip = document.createElement('div');
-            chip.className = 'word-chip';
-            chip.textContent = word;
-            if (isCorrect) {
-                chip.style.background = 'linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%)';
-            }
-            document.getElementById('wordList').appendChild(chip);
-        }
-
-        function showFeedback(type, message) {
-            const feedback = document.getElementById('feedback');
-            feedback.className = `feedback ${type} show`;
-            feedback.innerHTML = message;
-            
-            setTimeout(() => {
-                feedback.classList.remove('show');
-            }, 2000);
-        }
-
-        function updateStats() {
-            document.getElementById('level').textContent = level;
-            document.getElementById('score').textContent = score;
-            document.getElementById('streak').textContent = streak;
-        }
-
-        function endGame() {
-            document.getElementById('gameArea').style.display = 'none';
-            document.getElementById('gameOver').classList.add('show');
-            
-            document.getElementById('finalLevel').textContent = level - 1;
-            document.getElementById('finalScore').textContent = score;
-            document.getElementById('maxStreak').textContent = maxStreak;
-        }
-
-        function resetGame() {
-            document.getElementById('gameArea').style.display = 'block';
-            document.getElementById('gameOver').classList.remove('show');
-            document.getElementById('startControls').style.display = 'block';
-            document.getElementById('instructions').textContent = 'Boshlash uchun tugmani bosing';
-            document.getElementById('wordsDisplay').innerHTML = '';
-            document.getElementById('category').style.display = 'none';
-            document.getElementById('progressInfo').textContent = '';
-            document.getElementById('inputArea').classList.remove('show');
-        }
-
-        // Enter key support
-        document.getElementById('wordInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                submitWord();
-            }
-        });
-    </script>
+function flipCard(i,el){
+  if(lock||cards[i].flipped||cards[i].matched)return;
+  initAudio();
+  if(!gameStarted){gameStarted=true;timer=setInterval(function(){seconds++;updateTime();},1000);}
+  sfxFlip();cards[i].flipped=true;el.classList.add('flipped');flipped.push(i);
+  if(flipped.length===2){moves++;updateHUD();lock=true;setTimeout(checkMatch,700);}
+}
+function checkMatch(){
+  var a=cards[flipped[0]],b=cards[flipped[1]];
+  if(a.sym===b.sym){
+    a.matched=b.matched=true;a.el.classList.add('matched');b.el.classList.add('matched');
+    matched++;sfxMatch();showMsg(T[lang].match,'#00ffcc');updateHUD();
+    if(matched===totalPairs){setTimeout(winGame,600);}
+  } else {
+    sfxNoMatch();showMsg(T[lang].noMatch,'#ff4488');
+    a.flipped=b.flipped=false;a.el.classList.remove('flipped');b.el.classList.remove('flipped');
+  }
+  flipped=[];lock=false;
+}
+function showMsg(txt,col){var el=document.getElementById('msg');el.textContent=txt;el.style.color=col;clearTimeout(el._t);el._t=setTimeout(function(){el.textContent='';},1200);}
+function updateHUD(){document.getElementById('movesVal').textContent=moves;document.getElementById('pairsVal').textContent=matched+'/'+totalPairs;}
+function updateTime(){var m=Math.floor(seconds/60),s=seconds%60;document.getElementById('timeVal').textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+function winGame(){
+  clearInterval(timer);sfxWin();
+  if(bestTime===null||seconds<bestTime)bestTime=seconds;
+  var bm=Math.floor(bestTime/60),bs=bestTime%60,m=Math.floor(seconds/60),s=seconds%60;
+  document.getElementById('wMoves').textContent=moves;
+  document.getElementById('wTime').textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+  document.getElementById('wBest').textContent=(bm<10?'0':'')+bm+':'+(bs<10?'0':'')+bs;
+  document.getElementById('winOv').classList.remove('hidden');
+}
+window.addEventListener('load',function(){drawGlobeBtn();applyLang();startGame();});
+</script>
 </body>
 </html>
